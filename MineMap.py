@@ -34,7 +34,7 @@ def zuck_small_model(filename):
                 'x': data[1],
                 'y': data[2],
                 'z': data[3],
-                'weight': data[6]+data[7],
+                'weight': float(data[6])+float(data[7]),
                 'cost': data[4],
                 'value': data[5],
                 'rock_tonnes': data[6],
@@ -57,7 +57,7 @@ def new_block_model(map_type):
 
 
 def save_to_database(filename, data):
-    with open('model files\\'+filename+'.db', 'wb') as handle:
+    with open('model_files\\'+filename+'.db', 'wb') as handle:
         pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -73,7 +73,7 @@ def load_map():
     global model_loaded
     current_directory = os.path.dirname(os.path.abspath(__file__))
     menu_keys = []
-    os.chdir(current_directory + "\model files")
+    os.chdir(current_directory + "\model_files")
     for file in glob.glob("*.db"):
         menu_keys.append(file)
     if len(menu_keys) == 0:
@@ -96,7 +96,7 @@ def load_map():
             if menu_key == "back":
                 break
             else:
-                model_loaded = read_database(current_directory + "\model files\\" + menu_key)
+                model_loaded = read_database(current_directory + "\model_files\\" + menu_key)
                 break
         else:
             print("Unknown Option, please select one of the given ones...")
@@ -146,7 +146,7 @@ def query_map():
         input("you must first load a map...")
         return None
     while True:
-        block_id = input("please enter a block id of the currently loaded model")
+        block_id = input("please enter a block id of the currently loaded model: ")
         try:
             int(block_id)
         except:
@@ -155,7 +155,7 @@ def query_map():
         if block_id in model_loaded:
             print("block " + block_id + " info: ")
             for data in model_loaded[block_id]:
-                print (data + ": " + model_loaded[block_id][data])
+                print("{0}: {1}".format(data, model_loaded[block_id][data]))
             break
         else:
             print("Invalid block id...")
