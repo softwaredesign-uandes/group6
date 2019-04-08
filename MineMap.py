@@ -1,50 +1,8 @@
-import sys
-import pickle
-import os
 import glob
-
-loaded_model = None
-mineral_deposits = {}
-grade_types = ["Ton", "%", "oz/ton", "ppm"]
-current_directory = os.path.dirname(os.path.abspath(__file__))
-
-
-class MineralDeposit:  # Entity
-    def __init__(self, name, x, y, z, weight, grades):
-        self.name = name
-        self.x_coordinate_column = x
-        self.y_coordinate_column = y
-        self.z_coordinate_column = z
-        self.weight_column = weight
-        self.grades = grades
-
-
-class BlockModel:  # Entity
-    def __init__(self, name, blocks, mineral_deposit):
-        self.name = name
-        self.blocks = blocks
-        self.mineral_deposit = mineral_deposit
-
-
-class Block:  # Value Object
-    def __init__(self, block_id, x, y, z, weight, grades):
-        self.id = block_id
-        self.x_coordinate = x
-        self.y_coordinate = y
-        self.z_coordinate = z
-        self.weight = weight
-        self.grades = grades
-
-
-def load_mineral_deposits():
-    """
-    Function for loading Mineral Deposits when starting the program, if available.
-    """
-    global mineral_deposits
-    try:
-        mineral_deposits = read_database(current_directory + "\model_files\\mineral_deposits.db")
-    except:
-        mineral_deposits = {}
+import os
+from DomainObjects import MineralDeposit, BlockModel, Block
+import GlobalVariables
+from UtilityFunctions import ensure_number, save_to_database, read_database, close_program, current_directory
 
 
 def main_menu():
@@ -70,25 +28,11 @@ def main_menu():
             print("Unknown Option, please select one of the given ones...")
 
 
-def ensure_number(new_number, repeat_text):
-    is_number = False
-    while not is_number:
-        try:
-            new_number = int(new_number)
-            is_number = True
-        except:
-            print("You must enter a number...")
-            new_number = input(repeat_text)
-            continue
-    return new_number
-
-
 def new_block_model():
     """
     Function for creating new Block Models for Mineral Deposits.
     """
-    global loaded_model
-    mineral_deposit_keys = list(mineral_deposits.keys())
+    mineral_deposit_keys = list(GlobalVariables.mineral_deposits.keys())
     new_model = None
     if len(mineral_deposit_keys) == 0:
         input("No Mineral Deposits Available, you must create one first...")
@@ -111,7 +55,7 @@ def new_block_model():
             print("Unknown Option, please select one of the given ones...")
     if new_model:
         save_to_database(new_model.name, new_model)
-        loaded_model = new_model
+        GlobalVariables.set_loaded_model(new_model)
 
 
 def load_block_model_from_file(selected_deposit):
@@ -123,11 +67,11 @@ def load_block_model_from_file(selected_deposit):
         input("file not found...")
         return None
     output_filename = input('please enter the location of output file:\n')
-    x_coordinate_column = mineral_deposits[selected_deposit].x_coordinate_column
-    y_coordinate_column = mineral_deposits[selected_deposit].y_coordinate_column
-    z_coordinate_column = mineral_deposits[selected_deposit].z_coordinate_column
-    weight_column = mineral_deposits[selected_deposit].weight_column
-    mineral_deposit_grades = mineral_deposits[selected_deposit].grades
+    x_coordinate_column = GlobalVariables.mineral_deposits[selected_deposit].x_coordinate_column
+    y_coordinate_column = GlobalVariables.mineral_deposits[selected_deposit].y_coordinate_column
+    z_coordinate_column = GlobalVariables.mineral_deposits[selected_deposit].z_coordinate_column
+    weight_column = GlobalVariables.mineral_deposits[selected_deposit].weight_column
+    mineral_deposit_grades = GlobalVariables.mineral_deposits[selected_deposit].grades
     blocks = []
     with open(filename) as f:
         for line in f.readlines():
@@ -150,24 +94,13 @@ def load_block_model_from_file(selected_deposit):
     return block_model
 
 
-def save_to_database(filename, data):
-    with open(current_directory + '\model_files\\'+filename+'.db', 'wb') as handle:
-        pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-
-def read_database(filename):
-    with open(filename, 'rb') as handle:
-        return pickle.load(handle)
-
-
 def new_mineral_deposit():
     """
     Function for creating new Mineral Deposits.
     """
-    global mineral_deposits
     new_mineral_deposit_name = input("Enter name for new Mineral Deposit \nor Leave blank to go back:")
     if new_mineral_deposit_name != "":
-        if new_mineral_deposit_name not in mineral_deposits:
+        if new_mineral_deposit_name not in GlobalVariables.mineral_deposits:
             print("Parameters for new block models:")
             x_coordinate = input("Column number for x coordinate:")
             x_coordinate = ensure_number(x_coordinate, "Column number for x coordinate:")
@@ -190,12 +123,12 @@ def new_mineral_deposit():
                     while new_mineral_name == "":
                         new_mineral_name = input("Enter mineral's name:")
                     print("Mineral Types:")
-                    for grade_type in range(len(grade_types)):
-                        print("{} - {}".format(grade_type + 1, grade_types[grade_type]))
+                    for grade_type in range(len(GlobalVariables.grade_types)):
+                        print("{} - {}".format(grade_type + 1, GlobalVariables.grade_types[grade_type]))
                     while True:
                         new_mineral_type = input("Select Mineral Type:")
                         new_mineral_type = ensure_number(new_mineral_type, "Select Mineral Type:")
-                        if 0 < new_mineral_type < len(grade_types) + 1:
+                        if 0 < new_mineral_type < len(GlobalVariables.grade_types) + 1:
                             break
                         else:
                             print("Option out of range, try again...")
@@ -210,8 +143,7 @@ def new_mineral_deposit():
                     print("Unknown option, try again...")
             mineral_deposit = MineralDeposit(new_mineral_deposit_name, x_coordinate, y_coordinate, z_coordinate,
                                              weight, grades)
-            mineral_deposits[new_mineral_deposit_name] = mineral_deposit
-            save_to_database("mineral_deposits", mineral_deposits)
+            GlobalVariables.add_mineral_deposit(new_mineral_deposit_name, mineral_deposit)
         else:
             input("There's already a Mineral Deposit with that name.")
 
@@ -220,7 +152,6 @@ def load_block_model_from_database():
     """
     Function for loading Block Models from the database.
     """
-    global loaded_model
     menu_keys = []
     os.chdir(current_directory + "\model_files")
     for file in glob.glob("*.db"):
@@ -245,7 +176,7 @@ def load_block_model_from_database():
             if menu_key == "back":
                 break
             else:
-                loaded_model = read_database(current_directory + "\model_files\\" + menu_key)
+                GlobalVariables.set_loaded_model(read_database(current_directory + "\model_files\\" + menu_key))
                 break
         else:
             print("Unknown Option, please select one of the given ones...")
@@ -261,7 +192,7 @@ def query_block_model():
         "Total Mineral weight of model": total_mineral_weight_block_model,
         "Percentage of Air Blocks in model": percentage_air_blocks_block_model
     }
-    if not loaded_model:
+    if not GlobalVariables.loaded_model:
         input("you must first load a map...")
         return None
     query_keys = list(query_options.keys())
@@ -283,6 +214,9 @@ def query_block_model():
 
 
 def query_block():
+    """
+    Function for querying specific Block from loaded Block Model.
+    """
     x_coordinate = input("X coordinate of the block:")
     x_coordinate = ensure_number(x_coordinate, "X coordinate of the block:")
     y_coordinate = input("Y coordinate of the block:")
@@ -290,28 +224,27 @@ def query_block():
     z_coordinate = input("Z coordinate of the block:")
     z_coordinate = ensure_number(z_coordinate, "Z coordinate of the block:")
     block_id = str(x_coordinate) + "," + str(y_coordinate) + "," + str(z_coordinate)
-    for block in loaded_model.blocks:
+    for block in GlobalVariables.loaded_model.blocks:
         if block.id == block_id:
             print("X,Y,Z: {}".format(block_id))
             print("Weigth: {}".format(block.weight))
             for grade in block.grades:
                 print("{}: {} {}".format(grade, block.grades[grade]["value"],
-                                         grade_types[block.grades[grade]["grade_type"]-1]))
-
+                                         GlobalVariables.grade_types[block.grades[grade]["grade_type"]-1]))
 
 
 def count_model_blocks():
-    print("Number of blocks: {}.".format(len(loaded_model.blocks)))
+    print("Number of blocks: {}.".format(len(GlobalVariables.loaded_model.blocks)))
 
 
 def total_weight_block_model():
-    total_weight = sum(block.weight for block in loaded_model.blocks)
+    total_weight = sum(block.weight for block in GlobalVariables.loaded_model.blocks)
     print("Total weight: {} tons.".format(total_weight))
 
 
 def total_mineral_weight_block_model():
-    loaded_model_mineral_deposit = mineral_deposits[loaded_model.mineral_deposit]
-    model_blocks = loaded_model.blocks
+    loaded_model_mineral_deposit = GlobalVariables.mineral_deposits[GlobalVariables.loaded_model.mineral_deposit]
+    model_blocks = GlobalVariables.loaded_model.blocks
     for grade in loaded_model_mineral_deposit.grades:
         grade_weight = 0
         grade_type = loaded_model_mineral_deposit.grades[grade]["grade_type"]
@@ -324,25 +257,17 @@ def total_mineral_weight_block_model():
                     elif grade_type == 2:
                         grade_weight += block_grades[block_grade]["value"] * block.weight
                     elif grade_type == 3:
-                        grade_weight += block_grades[block_grade]["value"] * block.weight / 32000
+                        grade_weight += block_grades[block_grade]["value"] * block.weight / 35273.962
                     elif grade_type == 4:
                         grade_weight += block_grades[block_grade]["value"] * block.weight * 0.0001
-        print("Total weight of {} is {} tons.".format(grade, grade_weight))
+        print("Total weight of {} is {} metric tons.".format(grade, grade_weight))
 
 
 def percentage_air_blocks_block_model():
-    air_blocks = sum(block.weight == 0 for block in loaded_model.blocks)
-    total_blocks = len(loaded_model.blocks)
+    air_blocks = sum(block.weight == 0 for block in GlobalVariables.loaded_model.blocks)
+    total_blocks = len(GlobalVariables.loaded_model.blocks)
     print("Percentage of Air blocks: {}%.".format((air_blocks/total_blocks)*100))
 
 
-def close_program():
-    """
-    Function for closing connection with database before exiting.
-    """
-    print("Closing program...")
-    sys.exit()
-
-
-load_mineral_deposits()
+GlobalVariables.load_mineral_deposits()
 main_menu()
