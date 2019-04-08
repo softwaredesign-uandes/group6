@@ -5,7 +5,7 @@ import glob
 
 loaded_model = None
 mineral_deposits = {}
-mineral_types = ["Ton", "%", "oz/ton", "ppm"]
+grade_types = ["Ton", "%", "oz/ton", "ppm"]
 current_directory = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -135,14 +135,14 @@ def load_block_model_from_file(selected_deposit):
             block_grades = {}
             for grade in mineral_deposit_grades:
                 block_grades[grade] = {
-                    "value": data[mineral_deposit_grades[grade]["mineral_column"]],
-                    "grade_type": mineral_deposit_grades[grade]["mineral_type"]
+                    "value": float(data[mineral_deposit_grades[grade]["mineral_column"]]),
+                    "grade_type": mineral_deposit_grades[grade]["grade_type"]
                 }
             block_id = data[x_coordinate_column]+","+data[y_coordinate_column]+","+data[z_coordinate_column]
             block_x_coordinate = data[x_coordinate_column]
             block_y_coordinate = data[y_coordinate_column]
             block_z_coordinate = data[z_coordinate_column]
-            block_weight = data[weight_column]
+            block_weight = float(data[weight_column])
             new_block = Block(block_id, block_x_coordinate, block_y_coordinate, block_z_coordinate, block_weight,
                               block_grades)
             blocks.append(new_block)
@@ -190,18 +190,18 @@ def new_mineral_deposit():
                     while new_mineral_name == "":
                         new_mineral_name = input("Enter mineral's name:")
                     print("Mineral Types:")
-                    for mineral_type in range(len(mineral_types)):
-                        print("{} - {}".format(mineral_type + 1, mineral_types[mineral_type]))
+                    for grade_type in range(len(grade_types)):
+                        print("{} - {}".format(grade_type + 1, grade_types[grade_type]))
                     while True:
                         new_mineral_type = input("Select Mineral Type:")
                         new_mineral_type = ensure_number(new_mineral_type, "Select Mineral Type:")
-                        if 0 < new_mineral_type < len(mineral_types) + 1:
+                        if 0 < new_mineral_type < len(grade_types) + 1:
                             break
                         else:
                             print("Option out of range, try again...")
                     new_mineral = {
                         "mineral_column": new_mineral_column,
-                        "mineral_type": new_mineral_type
+                        "grade_type": new_mineral_type
                     }
                     grades[new_mineral_name] = new_mineral
                 elif new_mineral_option == 2:
@@ -211,7 +211,7 @@ def new_mineral_deposit():
             mineral_deposit = MineralDeposit(new_mineral_deposit_name, x_coordinate, y_coordinate, z_coordinate,
                                              weight, grades)
             mineral_deposits[new_mineral_deposit_name] = mineral_deposit
-            save_to_database("mineral_deposits",mineral_deposits)
+            save_to_database("mineral_deposits", mineral_deposits)
         else:
             input("There's already a Mineral Deposit with that name.")
 
@@ -253,25 +253,87 @@ def load_block_model_from_database():
 
 def query_block_model():
     """
-    Function for querying a loaded Block Model.
+    Function for querying the loaded Block Model.
     """
+    query_options = {
+        "Information of specific block": query_block,
+        "Total weight of model": total_weight_block_model,
+        "Total Mineral weight of model": total_mineral_weight_block_model,
+        "Percentage of Air Blocks in model": percentage_air_blocks_block_model
+    }
     if not loaded_model:
         input("you must first load a map...")
         return None
+    query_keys = list(query_options.keys())
     while True:
-        block_id = input("please enter a block id of the currently loaded model: ")
-        try:
-            int(block_id)
-        except:
-            print("You must enter a number...")
-            continue
-        if block_id in loaded_model:
-            print("block " + block_id + " info: ")
-            for data in loaded_model[block_id]:
-                print("{0}: {1}".format(data, loaded_model[block_id][data]))
-            break
+        print("Query options:")
+        for option_index in range(len(query_keys)):
+            print("{} - {}".format(option_index + 1, query_keys[option_index]))
+        print("0 - Back")
+        selected_option = input("Select Option: ")
+        selected_option = ensure_number(selected_option, "Select Option: ")
+        if -1 < selected_option < len(query_keys) + 1:
+            if selected_option == 0:
+                break
+            else:
+                query_key = query_keys[selected_option - 1]
+                query_options[query_key]()
         else:
-            print("Invalid block id...")
+            print("Unknown Option, please select one of the given ones...")
+
+
+def query_block():
+    x_coordinate = input("X coordinate of the block:")
+    x_coordinate = ensure_number(x_coordinate, "X coordinate of the block:")
+    y_coordinate = input("Y coordinate of the block:")
+    y_coordinate = ensure_number(y_coordinate, "Y coordinate of the block:")
+    z_coordinate = input("Z coordinate of the block:")
+    z_coordinate = ensure_number(z_coordinate, "Z coordinate of the block:")
+    block_id = str(x_coordinate) + "," + str(y_coordinate) + "," + str(z_coordinate)
+    for block in loaded_model.blocks:
+        if block.id == block_id:
+            print("X,Y,Z: {}".format(block_id))
+            print("Weigth: {}".format(block.weight))
+            for grade in block.grades:
+                print("{}: {} {}".format(grade, block.grades[grade]["value"],
+                                         grade_types[block.grades[grade]["grade_type"]-1]))
+
+
+
+def count_model_blocks():
+    print("Number of blocks: {}.".format(len(loaded_model.blocks)))
+
+
+def total_weight_block_model():
+    total_weight = sum(block.weight for block in loaded_model.blocks)
+    print("Total weight: {} tons.".format(total_weight))
+
+
+def total_mineral_weight_block_model():
+    loaded_model_mineral_deposit = mineral_deposits[loaded_model.mineral_deposit]
+    model_blocks = loaded_model.blocks
+    for grade in loaded_model_mineral_deposit.grades:
+        grade_weight = 0
+        grade_type = loaded_model_mineral_deposit.grades[grade]["grade_type"]
+        for block in model_blocks:
+            block_grades = block.grades
+            for block_grade in block_grades:
+                if block_grade == grade:
+                    if grade_type == 1:
+                        grade_weight += block_grades[block_grade]["value"]
+                    elif grade_type == 2:
+                        grade_weight += block_grades[block_grade]["value"] * block.weight
+                    elif grade_type == 3:
+                        grade_weight += block_grades[block_grade]["value"] * block.weight / 32000
+                    elif grade_type == 4:
+                        grade_weight += block_grades[block_grade]["value"] * block.weight * 0.0001
+        print("Total weight of {} is {} tons.".format(grade, grade_weight))
+
+
+def percentage_air_blocks_block_model():
+    air_blocks = sum(block.weight == 0 for block in loaded_model.blocks)
+    total_blocks = len(loaded_model.blocks)
+    print("Percentage of Air blocks: {}%.".format((air_blocks/total_blocks)*100))
 
 
 def close_program():
