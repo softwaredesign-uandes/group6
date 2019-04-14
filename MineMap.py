@@ -188,9 +188,10 @@ def query_block_model():
     """
     query_options = {
         "Information of specific block": query_block,
-        "Total weight of model": total_weight_block_model,
-        "Total Mineral weight of model": total_mineral_weight_block_model,
-        "Percentage of Air Blocks in model": percentage_air_blocks_block_model
+        "Number of Blocks in model": query_block_model_blocks_quantity,
+        "Total weight of model": query_block_model_total_weight,
+        "Total Mineral weight of model": query_block_model_total_mineral_weight,
+        "Percentage of Air Blocks in model": query_block_model_air_block_percentage
     }
     if not GlobalVariables.loaded_model:
         input("you must first load a map...")
@@ -208,12 +209,12 @@ def query_block_model():
                 break
             else:
                 query_key = query_keys[selected_option - 1]
-                query_options[query_key]()
+                query_options[query_key](GlobalVariables.loaded_model)
         else:
             print("Unknown Option, please select one of the given ones...")
 
 
-def query_block():
+def query_block(block_model):
     """
     Function for querying specific Block from loaded Block Model.
     """
@@ -224,7 +225,7 @@ def query_block():
     z_coordinate = input("Z coordinate of the block:")
     z_coordinate = ensure_number(z_coordinate, "Z coordinate of the block:")
     block_id = str(x_coordinate) + "," + str(y_coordinate) + "," + str(z_coordinate)
-    for block in GlobalVariables.loaded_model.blocks:
+    for block in block_model.blocks:
         if block.id == block_id:
             print("X,Y,Z: {}".format(block_id))
             print("Weigth: {}".format(block.weight))
@@ -233,40 +234,27 @@ def query_block():
                                          GlobalVariables.grade_types[block.grades[grade]["grade_type"]-1]))
 
 
-def count_model_blocks():
-    print("Number of blocks: {}.".format(len(GlobalVariables.loaded_model.blocks)))
+def query_block_model_blocks_quantity(block_model):
+    blocks_quantity = block_model.count_blocks()
+    print("Number of blocks: {}.".format(blocks_quantity))
 
 
-def total_weight_block_model():
-    total_weight = sum(block.weight for block in GlobalVariables.loaded_model.blocks)
+def query_block_model_total_weight(block_model):
+    total_weight = block_model.total_weight()
     print("Total weight: {} tons.".format(total_weight))
 
 
-def total_mineral_weight_block_model():
-    loaded_model_mineral_deposit = GlobalVariables.mineral_deposits[GlobalVariables.loaded_model.mineral_deposit]
-    model_blocks = GlobalVariables.loaded_model.blocks
-    for grade in loaded_model_mineral_deposit.grades:
-        grade_weight = 0
-        grade_type = loaded_model_mineral_deposit.grades[grade]["grade_type"]
-        for block in model_blocks:
-            block_grades = block.grades
-            for block_grade in block_grades:
-                if block_grade == grade:
-                    if grade_type == 1:
-                        grade_weight += block_grades[block_grade]["value"]
-                    elif grade_type == 2:
-                        grade_weight += block_grades[block_grade]["value"] * block.weight
-                    elif grade_type == 3:
-                        grade_weight += block_grades[block_grade]["value"] * block.weight / 35273.962
-                    elif grade_type == 4:
-                        grade_weight += block_grades[block_grade]["value"] * block.weight * 0.0001
-        print("Total weight of {} is {} metric tons.".format(grade, grade_weight))
+def query_block_model_total_mineral_weight(block_model):
+    mineral_weights = block_model.total_mineral_weight()
+    for mineral_weight in mineral_weights:
+        mineral = mineral_weight
+        weight = mineral_weights[mineral_weight]
+        print("Total weight of {} is {} metric tons.".format(mineral, weight))
 
 
-def percentage_air_blocks_block_model():
-    air_blocks = sum(block.weight == 0 for block in GlobalVariables.loaded_model.blocks)
-    total_blocks = len(GlobalVariables.loaded_model.blocks)
-    print("Percentage of Air blocks: {}%.".format((air_blocks/total_blocks)*100))
+def query_block_model_air_block_percentage(block_model):
+    air_blocks_percentage = block_model.air_blocks_percentage()
+    print("Percentage of Air blocks: {}%.".format(air_blocks_percentage))
 
 
 GlobalVariables.load_mineral_deposits()
