@@ -1,6 +1,8 @@
 import glob
 import os
-from DomainObjects import MineralDeposit, BlockModel, Block
+from Block import *
+from BlockModel import *
+from MineralDeposit import *
 import GlobalVariables
 from UtilityFunctions import ensure_number, save_to_database, read_database, close_program, current_directory
 
