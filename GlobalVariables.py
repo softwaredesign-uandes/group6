@@ -1,6 +1,8 @@
 import os
 from UtilityFunctions import read_database, save_to_database, current_directory
-from DomainObjects import MineralDeposit, BlockModel, Block
+from Block import *
+from BlockModel import *
+from MineralDeposit import *
 
 loaded_model = None
 mineral_deposits = {}
