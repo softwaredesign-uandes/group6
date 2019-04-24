@@ -272,6 +272,7 @@ class BlockModelStatistics(unittest.TestCase):
     def test_correct_block_model_get_block_model_structure(self):
         self.assertEqual(self.blockModel.get_block_model_structure(),{"Au":1})
 
+
 class BlockModelReblockWithValidArguments(unittest.TestCase):
     def setUp(self):
         self.block1 = Block("0,0,0"
@@ -373,9 +374,15 @@ class BlockModelReblockWithValidArguments(unittest.TestCase):
                              "Incorrect new grade type.")
 
     def test_block_model_reblock_model_function_exists(self):
-        self.blockModel.reblock_model(2, 2, 2)
+        self.blockModel.reblock_model(3, 3, 3)
 
-class BlockModelReblockWithValidArguments(unittest.TestCase):
+    def test_block_model_reblock_model_correct_block_quantity(self):
+        self.blockModel.reblock_model(3, 3, 3)
+        self.assertEqual(len(self.blockModel.blocks), 2,
+                         "Incorrect reblocked model block count.")
+
+
+class BlockModelReblockWithInvalidArguments(unittest.TestCase):
     def setUp(self):
         self.block1 = Block("0,0,0"
                             , 0
