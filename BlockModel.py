@@ -157,15 +157,14 @@ class BlockModel:  # Entity
             block_id_positions[self.blocks[i].id] = i
 
         new_x_coordinate = 0
-        new_y_coordinate = 0
-        new_z_coordinate = 0
-
         reblocked_blocks = []
         x_axis = 0
         while x_axis <= x_limit:
             y_axis = 0
+            new_y_coordinate = 0
             while y_axis <= y_limit:
                 z_axis = 0
+                new_z_coordinate = 0
                 while z_axis <= z_limit:
                     x_range = list(range(x_axis, x_axis + Rx))
                     y_range = list(range(y_axis, y_axis + Ry))

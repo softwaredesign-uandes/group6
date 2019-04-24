@@ -395,6 +395,12 @@ class BlockModelReblockWithValidArguments(unittest.TestCase):
         self.assertAlmostEqual(mineral_total_weight_after_reblock, mineral_total_weight_before_reblock,
                                "Incorrect mineral total weight after reblock.")
 
+    def test_block_model_reblock_model_correct_new_border_limits(self):
+        self.blockModel.reblock_model(2, 2, 2)
+        new_border_limits = self.blockModel.get_border_limits()
+        self.assertEqual(new_border_limits, [0, 61, 160],
+                         "Incorrect border limits after reblock.")
+
 
 class BlockModelReblockWithInvalidArguments(unittest.TestCase):
     def setUp(self):
