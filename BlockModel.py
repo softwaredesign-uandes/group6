@@ -105,4 +105,7 @@ class BlockModel:  # Entity
         return grade_and_types
 
     def get_border_limits(self):
-        pass
+        x_coordinate_limit = max(block.x_coordinate for block in self.blocks)
+        y_coordinate_limit = max(block.y_coordinate for block in self.blocks)
+        z_coordinate_limit = max(block.z_coordinate for block in self.blocks)
+        return [x_coordinate_limit, y_coordinate_limit, z_coordinate_limit]
