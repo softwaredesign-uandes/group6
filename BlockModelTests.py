@@ -388,6 +388,13 @@ class BlockModelReblockWithValidArguments(unittest.TestCase):
         self.assertEqual(total_weight_after_reblock, total_weight_before_reblock,
                          "Incorrect total weight after reblock.")
 
+    def test_block_model_reblock_model_correct_mineral_total_weight(self):
+        mineral_total_weight_before_reblock = self.blockModel.total_mineral_weight()
+        self.blockModel.reblock_model(2, 2, 2)
+        mineral_total_weight_after_reblock = self.blockModel.total_mineral_weight()
+        self.assertAlmostEqual(mineral_total_weight_after_reblock, mineral_total_weight_before_reblock,
+                               "Incorrect mineral total weight after reblock.")
+
 
 class BlockModelReblockWithInvalidArguments(unittest.TestCase):
     def setUp(self):
