@@ -1,4 +1,7 @@
 from Block import *
+import itertools
+
+
 class BlockModel:  # Entity
     def __init__(self, name, blocks, mineral_deposit):
         self._name = None
@@ -110,24 +113,77 @@ class BlockModel:  # Entity
         z_coordinate_limit = max(block.z_coordinate for block in self.blocks)
         return [x_coordinate_limit, y_coordinate_limit, z_coordinate_limit]
 
-    def combine_blocks(self, blocksToCombine, newCoordinates):
-        x,y,z = newCoordinates[0],newCoordinates[1],newCoordinates[2]
-        newId = str(x)+","+str(y)+","+str(z)
-        newWeight = 0
-        for block in blocksToCombine:
-            newWeight += block.weight
-        newGrades = {}
-        for mineral in blocksToCombine[0].grades.keys():
-            for block in blocksToCombine:
-                blockGradeValue = block.grades[mineral]["value"]
-                blockGradetype = block.grades[mineral]["grade_type"]
-                if mineral not in newGrades.keys():
-                    newGrades[mineral] = {"value":blockGradeValue, "grade_type":blockGradetype}
+    def combine_blocks(self, blocks_to_combine, new_coordinates):
+        x, y, z = new_coordinates[0], new_coordinates[1], new_coordinates[2]
+        new_id = str(x)+","+str(y)+","+str(z)
+        new_weight = 0
+        for block in blocks_to_combine:
+            new_weight += block.weight
+        new_grades = {}
+        for mineral in blocks_to_combine[0].grades.keys():
+            for block in blocks_to_combine:
+                block_grade_value = block.grades[mineral]["value"]
+                block_grade_type = block.grades[mineral]["grade_type"]
+                if mineral not in new_grades.keys():
+                    new_grades[mineral] = {"value": block_grade_value, "grade_type": block_grade_type}
                 else:
-                    if blockGradetype == 1:
-                        newValue = newGrades[mineral]["value"] + block.grades[mineral]["value"]
+                    if block_grade_type == 1:
+                        new_value = new_grades[mineral]["value"] + block.grades[mineral]["value"]
                     else:
-                        newValue = ((newWeight * newGrades[mineral]["value"])+(block.weight * blockGradeValue))/(newWeight+block.weight)
-                    newGrades[mineral]["value"] = newValue
-        newBlock = Block(newId, x, y, z, newWeight,newGrades)
-        return newBlock
+                        new_value = ((new_weight * new_grades[mineral]["value"])+(block.weight * block_grade_value)) / \
+                                    (new_weight+block.weight)
+                    new_grades[mineral]["value"] = new_value
+        new_block = Block(new_id, x, y, z, new_weight, new_grades)
+        return new_block
+
+    def reblock_model(self, Rx, Ry, Rz):
+        if not isinstance(Rx, int):
+            raise TypeError('Rx must be int')
+        if not isinstance(Ry, int):
+            raise TypeError('Ry must be int')
+        if not isinstance(Rz, int):
+            raise TypeError('Rz must be int')
+
+        if Rx < 1:
+            raise ValueError('Rx must be equal or greater than one')
+        if Ry < 1:
+            raise ValueError('Ry must be equal or greater than one')
+        if Rz < 1:
+            raise ValueError('Rz must be equal or greater than one')
+
+        x_limit, y_limit, z_limit = self.get_border_limits()
+        block_id_positions = {}
+        for i in range(len(self.blocks)):
+            block_id_positions[self.blocks[i].id] = i
+
+        new_x_coordinate = 0
+        new_y_coordinate = 0
+        new_z_coordinate = 0
+
+        reblocked_blocks = []
+        x_axis = 0
+        while x_axis <= x_limit:
+            y_axis = 0
+            while y_axis <= y_limit:
+                z_axis = 0
+                while z_axis <= z_limit:
+                    x_range = list(range(x_axis, x_axis + Rx))
+                    y_range = list(range(y_axis, y_axis + Ry))
+                    z_range = list(range(z_axis, z_axis + Rz))
+                    combine_blocks_list = []
+
+                    for coordinates in itertools.product(x_range, y_range, z_range):
+                        block_id = "{},{},{}".format(coordinates[0], coordinates[1], coordinates[2])
+                        if block_id in block_id_positions:
+                            combine_blocks_list.append(self.blocks[block_id_positions[block_id]])
+                    if len(combine_blocks_list) > 0:
+                        combine_blocks_coordinates = (new_x_coordinate, new_y_coordinate, new_z_coordinate)
+                        new_block = self.combine_blocks(combine_blocks_list, combine_blocks_coordinates)
+                        reblocked_blocks.append(new_block)
+                    z_axis += Rz
+                    new_z_coordinate += 1
+                y_axis += Ry
+                new_y_coordinate += 1
+            x_axis += Rx
+            new_x_coordinate += 1
+        self.blocks = reblocked_blocks
