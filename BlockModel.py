@@ -103,3 +103,6 @@ class BlockModel:  # Entity
         for grade in grade_template:
             grade_and_types[grade] = grade_template[grade]["grade_type"]
         return grade_and_types
+
+    def get_border_limits(self):
+        pass

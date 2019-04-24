@@ -272,5 +272,48 @@ class BlockModelStatistics(unittest.TestCase):
     def test_correct_block_model_get_block_model_structure(self):
         self.assertEqual(self.blockModel.get_block_model_structure(),{"Au":1})
 
+class BlockModelReblockWithValidArguments(unittest.TestCase):
+    def setUp(self):
+        self.block1 = Block("0,0,0"
+                                          , 0
+                                          , 0
+                                          , 0
+                                          , float(1000),
+                                          {"Au": {"value": float(500), "grade_type": 1}}
+
+                                          )
+        self.block2 = Block("0,123,321"
+                                          , 0
+                                          , 123
+                                          , 321
+                                          , float(1000),
+                                          {"Au": {"value": float(500), "grade_type": 1}}
+                                          )
+
+        self.block3 = Block("0,0,2"
+                                          , 0
+                                          , 0
+                                          , 2
+                                          , float(1000),
+                                          {"Au": {"value": float(500), "grade_type": 1}}
+                                          )
+
+        self.blocks = [self.block1,
+                       self.block2,
+                       self.block3]
+
+        self.mineralDeposit = MineralDeposit("testMineralDeposit",
+                                                           0,
+                                                           1,
+                                                           2,
+                                                           3,
+                                                           {"Au":{"mineral_column": 4,"grade_type": 1}}
+                                                           )
+
+        self.blockModel = BlockModel("testBlockModel", self.blocks, self.mineralDeposit.name)
+
+    def test_block_model_get_border_limits_function_exists(self):
+        self.blockModel.get_border_limits()
+
 if __name__ == '__main__':
     unittest.main()
