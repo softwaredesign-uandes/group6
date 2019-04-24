@@ -134,4 +134,9 @@ class BlockModel:  # Entity
         return new_block
 
     def reblock_model(self, Rx, Ry, Rz):
-        pass
+        if not isinstance(Rx, int):
+            raise TypeError('Rx must be int')
+        if not isinstance(Ry, int):
+            raise TypeError('Ry must be int')
+        if not isinstance(Rz, int):
+            raise TypeError('Rz must be int')
