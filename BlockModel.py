@@ -110,24 +110,25 @@ class BlockModel:  # Entity
         z_coordinate_limit = max(block.z_coordinate for block in self.blocks)
         return [x_coordinate_limit, y_coordinate_limit, z_coordinate_limit]
 
-    def combine_blocks(self, blocksToCombine, newCoordinates):
-        x,y,z = newCoordinates[0],newCoordinates[1],newCoordinates[2]
-        newId = str(x)+","+str(y)+","+str(z)
-        newWeight = 0
-        for block in blocksToCombine:
-            newWeight += block.weight
-        newGrades = {}
-        for mineral in blocksToCombine[0].grades.keys():
-            for block in blocksToCombine:
-                blockGradeValue = block.grades[mineral]["value"]
-                blockGradetype = block.grades[mineral]["grade_type"]
-                if mineral not in newGrades.keys():
-                    newGrades[mineral] = {"value":blockGradeValue, "grade_type":blockGradetype}
+    def combine_blocks(self, blocks_to_combine, new_coordinates):
+        x, y, z = new_coordinates[0], new_coordinates[1], new_coordinates[2]
+        new_id = str(x)+","+str(y)+","+str(z)
+        new_weight = 0
+        for block in blocks_to_combine:
+            new_weight += block.weight
+        new_grades = {}
+        for mineral in blocks_to_combine[0].grades.keys():
+            for block in blocks_to_combine:
+                block_grade_value = block.grades[mineral]["value"]
+                block_grade_type = block.grades[mineral]["grade_type"]
+                if mineral not in new_grades.keys():
+                    new_grades[mineral] = {"value":block_grade_value, "grade_type":block_grade_type}
                 else:
-                    if blockGradetype == 1:
-                        newValue = newGrades[mineral]["value"] + block.grades[mineral]["value"]
+                    if block_grade_type == 1:
+                        new_value = new_grades[mineral]["value"] + block.grades[mineral]["value"]
                     else:
-                        newValue = ((newWeight * newGrades[mineral]["value"])+(block.weight * blockGradeValue))/(newWeight+block.weight)
-                    newGrades[mineral]["value"] = newValue
-        newBlock = Block(newId, x, y, z, newWeight,newGrades)
-        return newBlock
+                        new_value = ((new_weight * new_grades[mineral]["value"])+(block.weight * block_grade_value)) / \
+                                    (new_weight+block.weight)
+                    new_grades[mineral]["value"] = new_value
+        new_block = Block(new_id, x, y, z, new_weight, new_grades)
+        return new_block
