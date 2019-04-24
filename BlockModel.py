@@ -109,3 +109,11 @@ class BlockModel:  # Entity
         y_coordinate_limit = max(block.y_coordinate for block in self.blocks)
         z_coordinate_limit = max(block.z_coordinate for block in self.blocks)
         return [x_coordinate_limit, y_coordinate_limit, z_coordinate_limit]
+
+    def combine_blocks(self, blocksToCombine, newCoordinates):
+        x,y,z = newCoordinates[0],newCoordinates[1],newCoordinates[2]
+        newId = str(x)+","+str(y)+","+str(z)
+        newWeight = 0
+        newGrades = {"MineralName": {"value": float(0), "grade_type": 1}}
+        newBlock = Block(newId, x, y, z, newWeight,newGrades)
+        return newBlock

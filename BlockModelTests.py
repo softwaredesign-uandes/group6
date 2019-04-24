@@ -321,7 +321,7 @@ class BlockModelReblockWithValidArguments(unittest.TestCase):
         self.assertEqual(self.blockModel.get_border_limits(), [0, 123, 321],
                          "incorrect block model border limits")
     def test_combine_blocks_function_exists(self):
-            self.blockModel.combine_blocks(self.blocksToCombine, self.newCoordinates)
+            self.blockModel.combine_blocks(self.blocks, self.newCoordinates)
 
 
 
