@@ -275,28 +275,38 @@ class BlockModelStatistics(unittest.TestCase):
 class BlockModelReblockWithValidArguments(unittest.TestCase):
     def setUp(self):
         self.block1 = Block("0,0,0"
-                                          , 0
-                                          , 0
-                                          , 0
-                                          , float(1000),
-                                          {"Au": {"value": float(500), "grade_type": 1}}
-
-                                          )
+                            , 0
+                            , 0
+                            , 0
+                            , float(1000)
+                            , {"Au": {"value": float(100), "grade_type": 1}
+                                , "Cu": {"value": float(100), "grade_type": 2}
+                                , "Ag": {"value": float(100), "grade_type": 3}
+                                , "Li": {"value": float(100), "grade_type": 4}}
+                            )
         self.block2 = Block("0,123,321"
-                                          , 0
-                                          , 123
-                                          , 321
-                                          , float(1000),
-                                          {"Au": {"value": float(500), "grade_type": 1}}
-                                          )
+                            , 0
+                            , 123
+                            , 321
+                            , float(1000)
+                            , {"Au": {"value": float(100), "grade_type": 1}
+                                , "Cu": {"value": float(100), "grade_type": 2}
+                                , "Ag": {"value": float(100), "grade_type": 3}
+                                , "Li": {"value": float(100), "grade_type": 4}
+                               }
+                            )
 
         self.block3 = Block("0,0,2"
-                                          , 0
-                                          , 0
-                                          , 2
-                                          , float(1000),
-                                          {"Au": {"value": float(500), "grade_type": 1}}
-                                          )
+                            , 0
+                            , 0
+                            , 2
+                            , float(1000)
+                            , {"Au": {"value": float(100), "grade_type": 1}
+                                , "Cu": {"value": float(100), "grade_type": 2}
+                                , "Ag": {"value": float(100), "grade_type": 3}
+                                , "Li": {"value": float(100), "grade_type": 4}
+                               }
+                            )
 
         self.blocks = [self.block1,
                        self.block2,
@@ -314,16 +324,53 @@ class BlockModelReblockWithValidArguments(unittest.TestCase):
 
         self.newCoordinates = (0,0,0)
 
+        x, y, z = self.newCoordinates[0], self.newCoordinates[1], self.newCoordinates[2]
+        newId = str(x) + "," + str(y) + "," + str(z)
+        newWeight = 3000
+        newGrades = {"Au": {"value": float(300), "grade_type": 1}
+                        , "Cu": {"value": float(100), "grade_type": 2}
+                        , "Ag": {"value": float(100), "grade_type": 3}
+                        , "Li": {"value": float(100), "grade_type": 4}
+                     }
+        self.correctCombinedBlock = Block(newId
+                            , x
+                            , y
+                            , z
+                            , newWeight
+                            , newGrades
+                            )
+
     def test_block_model_get_border_limits_function_exists(self):
         self.blockModel.get_border_limits()
 
     def test_correct_block_model_get_border_limits(self):
         self.assertEqual(self.blockModel.get_border_limits(), [0, 123, 321],
                          "incorrect block model border limits")
+
     def test_combine_blocks_function_exists(self):
-            self.blockModel.combine_blocks(self.blocks, self.newCoordinates)
+        self.blockModel.combine_blocks(self.blocks, self.newCoordinates)
 
-
+    def test_correct_combine_blocks(self):
+        combinedblock = self.blockModel.combine_blocks(self.blocks, self.newCoordinates)
+        self.assertEqual(self.correctCombinedBlock.id,combinedblock.id,
+                         "Incorrect new id in combined block.")
+        self.assertEqual(self.correctCombinedBlock.x_coordinate, combinedblock.x_coordinate,
+                         "Incorrect new x coordinate in combined block.")
+        self.assertEqual(self.correctCombinedBlock.y_coordinate, combinedblock.y_coordinate,
+                         "Incorrect new y coordinate in combined block.")
+        self.assertEqual(self.correctCombinedBlock.z_coordinate, combinedblock.z_coordinate,
+                         "Incorrect new z coordinate in combined block.")
+        self.assertEqual(self.correctCombinedBlock.weight, combinedblock.weight,
+                         "Incorrect new weight in combined block.")
+        for grade in self.correctCombinedBlock.grades.keys():
+            self.assertTrue(grade in combinedblock.grades.keys(),
+                            "Incorrect preservation of minerals in new block")
+            self.assertEqual(self.correctCombinedBlock.grades[grade]["value"],
+                             combinedblock.grades[grade]["value"],
+                             "Incorrect new grade value.")
+            self.assertEqual(self.correctCombinedBlock.grades[grade]["grade_type"],
+                             combinedblock.grades[grade]["grade_type"],
+                             "Incorrect new grade type.")
 
 
 if __name__ == '__main__':
