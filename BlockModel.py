@@ -114,6 +114,20 @@ class BlockModel:  # Entity
         x,y,z = newCoordinates[0],newCoordinates[1],newCoordinates[2]
         newId = str(x)+","+str(y)+","+str(z)
         newWeight = 0
-        newGrades = {"MineralName": {"value": float(0), "grade_type": 1}}
+        for block in blocksToCombine:
+            newWeight += block.weight
+        newGrades = {}
+        for mineral in blocksToCombine[0].grades.keys():
+            for block in blocksToCombine:
+                blockGradeValue = block.grades[mineral]["value"]
+                blockGradetype = block.grades[mineral]["grade_type"]
+                if mineral not in newGrades.keys():
+                    newGrades[mineral] = {"value":blockGradeValue, "grade_type":blockGradetype}
+                else:
+                    if blockGradetype == 1:
+                        newValue = newGrades[mineral]["value"] + block.grades[mineral]["value"]
+                    else:
+                        newValue = ((newWeight * newGrades[mineral]["value"])+(block.weight * blockGradeValue))/(newWeight+block.weight)
+                    newGrades[mineral]["value"] = newValue
         newBlock = Block(newId, x, y, z, newWeight,newGrades)
         return newBlock
