@@ -312,12 +312,18 @@ class BlockModelReblockWithValidArguments(unittest.TestCase):
 
         self.blockModel = BlockModel("testBlockModel", self.blocks, self.mineralDeposit.name)
 
+        self.newCoordinates = (0,0,0)
+
     def test_block_model_get_border_limits_function_exists(self):
         self.blockModel.get_border_limits()
 
     def test_correct_block_model_get_border_limits(self):
         self.assertEqual(self.blockModel.get_border_limits(), [0, 123, 321],
                          "incorrect block model border limits")
+    def test_combine_blocks_function_exists(self):
+            self.blockModel.combineBlocks(self.blocksToCombine, self.newCoordinates)
+
+
 
 
 if __name__ == '__main__':
