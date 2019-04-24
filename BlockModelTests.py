@@ -447,5 +447,9 @@ class BlockModelReblockWithValidArguments(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.blockModel.reblock_model("A", {}, self.blocks)
 
+    def test_block_model_reblock_model_invalid_values(self):
+        with self.assertRaises(ValueError):
+            self.blockModel.reblock_model(-1, 1, 1)
+
 if __name__ == '__main__':
     unittest.main()

@@ -140,3 +140,10 @@ class BlockModel:  # Entity
             raise TypeError('Ry must be int')
         if not isinstance(Rz, int):
             raise TypeError('Rz must be int')
+
+        if Rx < 1:
+            raise ValueError('Rx must be equal or greater than one')
+        if Ry < 1:
+            raise ValueError('Ry must be equal or greater than one')
+        if Rz < 1:
+            raise ValueError('Rz must be equal or greater than one')
