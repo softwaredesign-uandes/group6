@@ -122,7 +122,7 @@ class BlockModel:  # Entity
                 block_grade_value = block.grades[mineral]["value"]
                 block_grade_type = block.grades[mineral]["grade_type"]
                 if mineral not in new_grades.keys():
-                    new_grades[mineral] = {"value":block_grade_value, "grade_type":block_grade_type}
+                    new_grades[mineral] = {"value": block_grade_value, "grade_type": block_grade_type}
                 else:
                     if block_grade_type == 1:
                         new_value = new_grades[mineral]["value"] + block.grades[mineral]["value"]
@@ -132,3 +132,6 @@ class BlockModel:  # Entity
                     new_grades[mineral]["value"] = new_value
         new_block = Block(new_id, x, y, z, new_weight, new_grades)
         return new_block
+
+    def reblock_model(self, Rx, Ry, Rz):
+        pass

@@ -372,6 +372,9 @@ class BlockModelReblockWithValidArguments(unittest.TestCase):
                              combinedblock.grades[grade]["grade_type"],
                              "Incorrect new grade type.")
 
+    def test_block_model_reblock_model_function_exists(self):
+        self.blockModel.reblock_model(2,2,2)
+
 
 if __name__ == '__main__':
     unittest.main()
