@@ -1,4 +1,5 @@
 from Block import *
+from UtilityFunctions import chunks
 import itertools
 
 
@@ -113,28 +114,42 @@ class BlockModel:  # Entity
         z_coordinate_limit = max(block.z_coordinate for block in self.blocks)
         return [x_coordinate_limit, y_coordinate_limit, z_coordinate_limit]
 
+    def combine_grade_weight(self, mineral, blocks):
+        if blocks[0].grades[mineral]["grade_type"] == 1:
+            return sum(map(lambda b: b.grades[mineral]["value"], blocks)), blocks[0].grades[mineral]["grade_type"]
+        else:
+            total_mineral_weight = sum(map(lambda b: b.grades[mineral]["value"]*b.weight, blocks))
+            total_weight = sum(map(lambda b: b.weight, blocks))
+            return total_mineral_weight/total_weight, blocks[0].grades[mineral]["grade_type"]
+
     def combine_blocks(self, blocks_to_combine, new_coordinates):
         x, y, z = new_coordinates[0], new_coordinates[1], new_coordinates[2]
         new_id = str(x)+","+str(y)+","+str(z)
-        new_weight = 0
-        for block in blocks_to_combine:
-            new_weight += block.weight
-        new_grades = {}
-        for mineral in blocks_to_combine[0].grades.keys():
-            for block in blocks_to_combine:
-                block_grade_value = block.grades[mineral]["value"]
-                block_grade_type = block.grades[mineral]["grade_type"]
-                if mineral not in new_grades.keys():
-                    new_grades[mineral] = {"value": block_grade_value, "grade_type": block_grade_type}
-                else:
-                    if block_grade_type == 1:
-                        new_value = new_grades[mineral]["value"] + block.grades[mineral]["value"]
-                    else:
-                        new_value = ((new_weight * new_grades[mineral]["value"])+(block.weight * block_grade_value)) / \
-                                    (new_weight+block.weight)
-                    new_grades[mineral]["value"] = new_value
+        new_weight = sum(map(lambda b: b.weight, blocks_to_combine))
+        minerals = blocks_to_combine[0].grades.keys()
+        new_grade_values_and_types_values = list(map(self.combine_grade_weight, minerals,
+                                                     itertools.repeat(blocks_to_combine)))
+        value_and_type_tags = ("value", "grade_type")
+        new_grade_values_and_types = (list(map(lambda g: dict(zip(value_and_type_tags, g)),
+                                               new_grade_values_and_types_values)))
+        new_grades = dict(zip(minerals, new_grade_values_and_types))
         new_block = Block(new_id, x, y, z, new_weight, new_grades)
         return new_block
+
+    def combine_chunks(self, chunks_to_combine, block_id_positions, x_coordinates_chunks, y_coordinates_chunks,
+                       z_coordinates_chunks):
+        x_chunk = chunks_to_combine[0]
+        y_chunk = chunks_to_combine[1]
+        z_chunk = chunks_to_combine[2]
+        combine_block_ids_list = list(map(lambda x: "{},{},{}".format(x[0], x[1], x[2]),
+                                          itertools.product(x_chunk, y_chunk, z_chunk)))
+        combine_block_ids_list = list(filter(lambda x: x in block_id_positions, combine_block_ids_list))
+        if len(combine_block_ids_list) > 0:
+            combine_blocks_list = list(map(lambda x: self.blocks[block_id_positions[x]], combine_block_ids_list))
+            combine_blocks_coordinates = (x_coordinates_chunks.index(x_chunk), y_coordinates_chunks.index(y_chunk),
+                                          z_coordinates_chunks.index(z_chunk))
+            new_block = self.combine_blocks(combine_blocks_list, combine_blocks_coordinates)
+            return new_block
 
     def reblock_model(self, Rx, Ry, Rz):
         if not isinstance(Rx, int):
@@ -152,37 +167,22 @@ class BlockModel:  # Entity
             raise ValueError('Rz must be equal or greater than one')
 
         x_limit, y_limit, z_limit = self.get_border_limits()
-        block_id_positions = {}
-        for i in range(len(self.blocks)):
-            block_id_positions[self.blocks[i].id] = i
 
-        new_x_coordinate = 0
-        reblocked_blocks = []
-        x_axis = 0
-        while x_axis <= x_limit:
-            y_axis = 0
-            new_y_coordinate = 0
-            while y_axis <= y_limit:
-                z_axis = 0
-                new_z_coordinate = 0
-                while z_axis <= z_limit:
-                    x_range = list(range(x_axis, x_axis + Rx))
-                    y_range = list(range(y_axis, y_axis + Ry))
-                    z_range = list(range(z_axis, z_axis + Rz))
-                    combine_blocks_list = []
+        block_id_positions = dict(map(lambda x: (x[1].id, x[0]), enumerate(self.blocks)))
 
-                    for coordinates in itertools.product(x_range, y_range, z_range):
-                        block_id = "{},{},{}".format(coordinates[0], coordinates[1], coordinates[2])
-                        if block_id in block_id_positions:
-                            combine_blocks_list.append(self.blocks[block_id_positions[block_id]])
-                    if len(combine_blocks_list) > 0:
-                        combine_blocks_coordinates = (new_x_coordinate, new_y_coordinate, new_z_coordinate)
-                        new_block = self.combine_blocks(combine_blocks_list, combine_blocks_coordinates)
-                        reblocked_blocks.append(new_block)
-                    z_axis += Rz
-                    new_z_coordinate += 1
-                y_axis += Ry
-                new_y_coordinate += 1
-            x_axis += Rx
-            new_x_coordinate += 1
+        x_coordinates = list(range(x_limit+1))
+        y_coordinates = list(range(y_limit+1))
+        z_coordinates = list(range(z_limit+1))
+
+        x_coordinates_chunks = list(chunks(x_coordinates, Rx))
+        y_coordinates_chunks = list(chunks(y_coordinates, Ry))
+        z_coordinates_chunks = list(chunks(z_coordinates, Rz))
+
+        reblocked_blocks = list(map(self.combine_chunks,
+                                    itertools.product(x_coordinates_chunks, y_coordinates_chunks, z_coordinates_chunks),
+                                    itertools.repeat(block_id_positions),
+                                    itertools.repeat(x_coordinates_chunks),
+                                    itertools.repeat(y_coordinates_chunks),
+                                    itertools.repeat(z_coordinates_chunks)))
+        reblocked_blocks = list(filter(None.__ne__, reblocked_blocks))
         self.blocks = reblocked_blocks
