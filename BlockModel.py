@@ -75,25 +75,28 @@ class BlockModel:  # Entity
         total_weight = sum(block.weight for block in self.blocks)
         return total_weight
 
+    def __grade_weight(self,grade, grade_type):
+        weight = 0
+        for block in self.blocks:
+            block_grades = block.grades
+            for block_grade in block_grades:
+                if block_grade == grade:
+                    if grade_type == 1:
+                        weight += block_grades[block_grade]["value"]
+                    elif grade_type == 2:
+                        weight += block_grades[block_grade]["value"] * block.weight
+                    elif grade_type == 3:
+                        weight += block_grades[block_grade]["value"] * block.weight / 35273.962
+                    elif grade_type == 4:
+                        weight += block_grades[block_grade]["value"] * block.weight * 0.0001
+        return weight
+
     def total_mineral_weight(self):
         grade_and_types = self.get_block_model_structure()
         mineral_weight_results = {}
         for grade in grade_and_types:
-            grade_weight = 0
             grade_type = grade_and_types[grade]
-            for block in self.blocks:
-                block_grades = block.grades
-                for block_grade in block_grades:
-                    if block_grade == grade:
-                        if grade_type == 1:
-                            grade_weight += block_grades[block_grade]["value"]
-                        elif grade_type == 2:
-                            grade_weight += block_grades[block_grade]["value"] * block.weight
-                        elif grade_type == 3:
-                            grade_weight += block_grades[block_grade]["value"] * block.weight / 35273.962
-                        elif grade_type == 4:
-                            grade_weight += block_grades[block_grade]["value"] * block.weight * 0.0001
-            mineral_weight_results[grade] = grade_weight
+            mineral_weight_results[grade] = self.__grade_weight(grade,grade_type)
         return mineral_weight_results
 
     def air_blocks_percentage(self):

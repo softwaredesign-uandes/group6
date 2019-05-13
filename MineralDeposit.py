@@ -104,11 +104,7 @@ class MineralDeposit:  # Entity
         """Get mineral deposit grades"""
         return self._grades
 
-    @grades.setter
-    def grades(self, mineral_deposit_grades):
-        """Set mineral deposit grades"""
-        if not (isinstance(mineral_deposit_grades, dict)): raise TypeError("Mineral deposit grades must be defined in a dictionary")
-        if not mineral_deposit_grades: raise ValueError("Grades cannot be empty")
+    def __validate_minerals(self,mineral_deposit_grades):
         for mineral in mineral_deposit_grades.keys():
             if not (isinstance(mineral_deposit_grades[mineral],dict)):
                 raise TypeError("Grades value and grade type must be defined in a dictionary")
@@ -124,6 +120,13 @@ class MineralDeposit:  # Entity
                 raise TypeError("Index of grade type must be integer")
             if not (mineral_deposit_grades[mineral]["grade_type"] > 0):
                 raise ValueError("Index of grade type must be greater than zero")
+
+    @grades.setter
+    def grades(self, mineral_deposit_grades):
+        """Set mineral deposit grades"""
+        if not (isinstance(mineral_deposit_grades, dict)): raise TypeError("Mineral deposit grades must be defined in a dictionary")
+        if not mineral_deposit_grades: raise ValueError("Grades cannot be empty")
+        self.__validate_minerals(mineral_deposit_grades)
         self._grades = mineral_deposit_grades
 
     @grades.deleter
