@@ -230,13 +230,14 @@ def query_block(block_model):
     z_coordinate = input("Z coordinate of the block:")
     z_coordinate = ensure_number(z_coordinate, "Z coordinate of the block:")
     block_id = str(x_coordinate) + "," + str(y_coordinate) + "," + str(z_coordinate)
-    for block in block_model.blocks:
-        if block.id == block_id:
-            print("X,Y,Z: {}".format(block_id))
-            print("Weigth: {}".format(block.weight))
-            for grade in block.grades:
-                print("{}: {} {}".format(grade, block.grades[grade]["value"],
-                                         mine_map_variables.grade_types[block.grades[grade]["grade_type"]-1]))
+    target_block = list(filter(lambda block: block.id == block_id, block_model.blocks))
+    if len(target_block) > 0:
+        print("X,Y,Z: {}".format(block_id))
+        print("Weigth: {}".format(target_block[0].weight))
+        list(map(lambda grade: print("{}: {} {}".format(grade, target_block[0].grades[grade]["value"],
+                                                        mine_map_variables.grade_types[target_block[0]
+                                                        .grades[grade]["grade_type"]-1])),
+                 target_block[0].grades))
 
 
 def query_block_model_blocks_quantity(block_model):
