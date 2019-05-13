@@ -138,7 +138,8 @@ class BlockModel:  # Entity
         return new_block
 
     def combine_chunks(self, chunks_to_combine, block_id_positions, x_coordinates_chunks, y_coordinates_chunks,
-                       z_coordinates_chunks, virtual, reblock_factor):
+                       z_coordinates_chunks, virtual_reblocking, reblock_factor):
+        """If the reblock is virtual, the method will produce Block Groups, it will produce new Blocks otherwise."""
         x_chunk = chunks_to_combine[0]
         y_chunk = chunks_to_combine[1]
         z_chunk = chunks_to_combine[2]
@@ -149,7 +150,7 @@ class BlockModel:  # Entity
             combine_blocks_list = list(map(lambda x: self.blocks[block_id_positions[x]], combine_block_ids_list))
             combine_blocks_coordinates = (x_coordinates_chunks.index(x_chunk), y_coordinates_chunks.index(y_chunk),
                                           z_coordinates_chunks.index(z_chunk))
-            if virtual:
+            if virtual_reblocking:
                 new_block = BlockGroup(combine_blocks_list, reblock_factor)
             else:
                 new_block = self.combine_blocks(combine_blocks_list, combine_blocks_coordinates)
