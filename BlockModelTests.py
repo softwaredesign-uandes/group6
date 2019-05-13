@@ -395,73 +395,77 @@ class BlockModelReblockWithValidArguments(unittest.TestCase):
         self.assertAlmostEqual(mineral_total_weight_after_reblock, mineral_total_weight_before_reblock,
                                "Incorrect mineral total weight after reblock.")
 
-    class BlockModelVirtualReblockWithValidArguments(unittest.TestCase):
-        def setUp(self):
-            self.block1 = Block("0,0,0"
-                                , 0
-                                , 0
-                                , 0
-                                , float(1000)
-                                , {"Au": {"value": float(100), "grade_type": 1}
-                                    , "Cu": {"value": float(100), "grade_type": 2}
-                                    , "Ag": {"value": float(100), "grade_type": 3}
-                                    , "Li": {"value": float(100), "grade_type": 4}}
-                                )
-            self.block2 = Block("0,123,321"
-                                , 0
-                                , 123
-                                , 321
-                                , float(1000)
-                                , {"Au": {"value": float(100), "grade_type": 1}
-                                    , "Cu": {"value": float(100), "grade_type": 2}
-                                    , "Ag": {"value": float(100), "grade_type": 3}
-                                    , "Li": {"value": float(100), "grade_type": 4}
-                                   }
-                                )
+    def test_block_model_reblock_model_correct_new_border_limits(self):
+        self.blockModel.reblock_model(2, 2, 2, False)
 
-            self.block3 = Block("0,0,2"
-                                , 0
-                                , 0
-                                , 2
-                                , float(1000)
-                                , {"Au": {"value": float(100), "grade_type": 1}
-                                    , "Cu": {"value": float(100), "grade_type": 2}
-                                    , "Ag": {"value": float(100), "grade_type": 3}
-                                    , "Li": {"value": float(100), "grade_type": 4}
-                                   }
-                                )
 
-            self.blocks = [self.block1,
-                           self.block2,
-                           self.block3]
+class BlockModelVirtualReblockWithValidArguments(unittest.TestCase):
+    def setUp(self):
+        self.block1 = Block("0,0,0"
+                            , 0
+                            , 0
+                            , 0
+                            , float(1000)
+                            , {"Au": {"value": float(100), "grade_type": 1}
+                                , "Cu": {"value": float(100), "grade_type": 2}
+                                , "Ag": {"value": float(100), "grade_type": 3}
+                                , "Li": {"value": float(100), "grade_type": 4}}
+                            )
+        self.block2 = Block("0,123,321"
+                            , 0
+                            , 123
+                            , 321
+                            , float(1000)
+                            , {"Au": {"value": float(100), "grade_type": 1}
+                                , "Cu": {"value": float(100), "grade_type": 2}
+                                , "Ag": {"value": float(100), "grade_type": 3}
+                                , "Li": {"value": float(100), "grade_type": 4}
+                               }
+                            )
 
-            self.mineralDeposit = MineralDeposit("testMineralDeposit",
-                                                 0,
-                                                 1,
-                                                 2,
-                                                 3,
-                                                 {"Au": {"mineral_column": 4, "grade_type": 1}}
-                                                 )
+        self.block3 = Block("0,0,2"
+                            , 0
+                            , 0
+                            , 2
+                            , float(1000)
+                            , {"Au": {"value": float(100), "grade_type": 1}
+                                , "Cu": {"value": float(100), "grade_type": 2}
+                                , "Ag": {"value": float(100), "grade_type": 3}
+                                , "Li": {"value": float(100), "grade_type": 4}
+                               }
+                            )
 
-            self.blockModel = BlockModel("testBlockModel", self.blocks, self.mineralDeposit.name)
+        self.blocks = [self.block1,
+                       self.block2,
+                       self.block3]
 
-            self.newCoordinates = (0, 0, 0)
+        self.mineralDeposit = MineralDeposit("testMineralDeposit",
+                                             0,
+                                             1,
+                                             2,
+                                             3,
+                                             {"Au": {"mineral_column": 4, "grade_type": 1}}
+                                             )
 
-            x, y, z = self.newCoordinates[0], self.newCoordinates[1], self.newCoordinates[2]
-            newId = str(x) + "," + str(y) + "," + str(z)
-            newWeight = 3000
-            newGrades = {"Au": {"value": float(300), "grade_type": 1}
-                , "Cu": {"value": float(100), "grade_type": 2}
-                , "Ag": {"value": float(100), "grade_type": 3}
-                , "Li": {"value": float(100), "grade_type": 4}
-                         }
-            self.correctCombinedBlock = Block(newId
-                                              , x
-                                              , y
-                                              , z
-                                              , newWeight
-                                              , newGrades
-                                              )
+        self.blockModel = BlockModel("testBlockModel", self.blocks, self.mineralDeposit.name)
+
+        self.newCoordinates = (0, 0, 0)
+
+        x, y, z = self.newCoordinates[0], self.newCoordinates[1], self.newCoordinates[2]
+        newId = str(x) + "," + str(y) + "," + str(z)
+        newWeight = 3000
+        newGrades = {"Au": {"value": float(300), "grade_type": 1}
+            , "Cu": {"value": float(100), "grade_type": 2}
+            , "Ag": {"value": float(100), "grade_type": 3}
+            , "Li": {"value": float(100), "grade_type": 4}
+                     }
+        self.correctCombinedBlock = Block(newId
+                                          , x
+                                          , y
+                                          , z
+                                          , newWeight
+                                          , newGrades
+                                          )
 
     def test_block_model_virtual_reblock_model_function_exists(self):
         self.blockModel.reblock_model(3, 3, 3, True)
