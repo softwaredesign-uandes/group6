@@ -44,8 +44,8 @@ def new_block_model():
         return None
     while True:
         print("Menu options:")
-        for option_index in range(len(mineral_deposit_keys)):
-            print("{} - {}".format(option_index + 1, mineral_deposit_keys[option_index]))
+        list(map(lambda option: print("{} - {}".format(option + 1, mineral_deposit_keys[option])),
+                 range(len(mineral_deposit_keys))))
         print("0 - Back")
         selected_option = input("Select Mineral Deposit: ")
         selected_option = ensure_number(selected_option, "Select Mineral Deposit: ")
@@ -157,10 +157,8 @@ def load_block_model_from_database():
     """
     Function for loading Block Models from the database.
     """
-    menu_keys = []
     os.chdir(current_directory + "\model_files")
-    for file in glob.glob("*.db"):
-        menu_keys.append(file)
+    menu_keys = list(map(lambda file: file, glob.glob("*.db")))
     if len(menu_keys) == 0:
         input("No Block Maps Available, you must create one first...")
         return None
@@ -204,8 +202,7 @@ def query_block_model():
     query_keys = list(query_options.keys())
     while True:
         print("Query options:")
-        for option_index in range(len(query_keys)):
-            print("{} - {}".format(option_index + 1, query_keys[option_index]))
+        list(map(lambda option: print("{} - {}".format(option + 1, query_keys[option])), range(len(query_keys))))
         print("0 - Back")
         selected_option = input("Select Option: ")
         selected_option = ensure_number(selected_option, "Select Option: ")
