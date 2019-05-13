@@ -58,7 +58,7 @@ class BlockGroup(AbstractBlock):  # Value Object
         if dimension not in ["x","y","z"]: raise ValueError("invalid dimension letter, this must be 'x', 'y' or 'z'")
         reblock_factor = {"x": self.reblock_factors[0], "y": self.reblock_factors[1], "z": self.reblock_factors[2]}
         coodinate_values = []
-        for block in blocks:
+        for block in self.blocks:
             if dimension == "x":
                 coodinate_values.append(block.x_coordinate)
             elif dimension == "y":

@@ -1,4 +1,5 @@
 from Block import *
+from BlockGroup import *
 from UtilityFunctions import chunks
 import itertools
 
@@ -41,7 +42,7 @@ class BlockModel:  # Entity
         if not (isinstance(block_model_blocks, list)): raise TypeError("block model blocks must be a list of blocks")
         if not block_model_blocks: raise ValueError("block model blocks cannot be empty")
         for block in block_model_blocks:
-            if not (isinstance(block,Block)): raise TypeError("Block model blocks must be of 'Block' class")
+            if not (isinstance(block,(Block, BlockGroup))): raise TypeError("Block model blocks must be of 'Block' class")
         self._blocks = block_model_blocks
 
     @blocks.deleter
@@ -137,7 +138,7 @@ class BlockModel:  # Entity
         return new_block
 
     def combine_chunks(self, chunks_to_combine, block_id_positions, x_coordinates_chunks, y_coordinates_chunks,
-                       z_coordinates_chunks):
+                       z_coordinates_chunks, virtual, reblock_factor):
         x_chunk = chunks_to_combine[0]
         y_chunk = chunks_to_combine[1]
         z_chunk = chunks_to_combine[2]
@@ -148,10 +149,13 @@ class BlockModel:  # Entity
             combine_blocks_list = list(map(lambda x: self.blocks[block_id_positions[x]], combine_block_ids_list))
             combine_blocks_coordinates = (x_coordinates_chunks.index(x_chunk), y_coordinates_chunks.index(y_chunk),
                                           z_coordinates_chunks.index(z_chunk))
-            new_block = self.combine_blocks(combine_blocks_list, combine_blocks_coordinates)
+            if virtual:
+                new_block = BlockGroup(combine_blocks_list, reblock_factor)
+            else:
+                new_block = self.combine_blocks(combine_blocks_list, combine_blocks_coordinates)
             return new_block
 
-    def reblock_model(self, Rx, Ry, Rz):
+    def reblock_model(self, Rx, Ry, Rz, virtual):
         if not isinstance(Rx, int):
             raise TypeError('Rx must be int')
         if not isinstance(Ry, int):
@@ -183,6 +187,8 @@ class BlockModel:  # Entity
                                     itertools.repeat(block_id_positions),
                                     itertools.repeat(x_coordinates_chunks),
                                     itertools.repeat(y_coordinates_chunks),
-                                    itertools.repeat(z_coordinates_chunks)))
+                                    itertools.repeat(z_coordinates_chunks),
+                                    itertools.repeat(virtual),
+                                    itertools.repeat([Rx, Ry, Rz]),))
         reblocked_blocks = list(filter(None.__ne__, reblocked_blocks))
         self.blocks = reblocked_blocks
