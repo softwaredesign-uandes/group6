@@ -3,7 +3,7 @@ import os
 from Block import *
 from BlockModel import *
 from MineralDeposit import *
-import GlobalVariables
+from MineMapVariables import *
 from UtilityFunctions import ensure_number, save_to_database, read_database, close_program, current_directory,\
     get_reblock_params
 
@@ -37,15 +37,15 @@ def new_block_model():
     """
     Function for creating new Block Models for Mineral Deposits.
     """
-    mineral_deposit_keys = list(GlobalVariables.mineral_deposits.keys())
+    mineral_deposit_keys = list(mine_map_variables.mineral_deposits.keys())
     new_model = None
     if len(mineral_deposit_keys) == 0:
         input("No Mineral Deposits Available, you must create one first...")
         return None
     while True:
         print("Menu options:")
-        for option_index in range(len(mineral_deposit_keys)):
-            print("{} - {}".format(option_index + 1, mineral_deposit_keys[option_index]))
+        list(map(lambda option: print("{} - {}".format(option + 1, mineral_deposit_keys[option])),
+                 range(len(mineral_deposit_keys))))
         print("0 - Back")
         selected_option = input("Select Mineral Deposit: ")
         selected_option = ensure_number(selected_option, "Select Mineral Deposit: ")
@@ -60,7 +60,7 @@ def new_block_model():
             print("Unknown Option, please select one of the given ones...")
     if new_model:
         save_to_database(new_model.name, new_model)
-        GlobalVariables.set_loaded_model(new_model)
+        mine_map_variables.loaded_model = new_model
 
 
 def load_block_model_from_file(selected_deposit):
@@ -72,11 +72,11 @@ def load_block_model_from_file(selected_deposit):
         input("file not found...")
         return None
     output_filename = input('please enter the location of output file:\n')
-    x_coordinate_column = GlobalVariables.mineral_deposits[selected_deposit].x_coordinate_column
-    y_coordinate_column = GlobalVariables.mineral_deposits[selected_deposit].y_coordinate_column
-    z_coordinate_column = GlobalVariables.mineral_deposits[selected_deposit].z_coordinate_column
-    weight_column = GlobalVariables.mineral_deposits[selected_deposit].weight_column
-    mineral_deposit_grades = GlobalVariables.mineral_deposits[selected_deposit].grades
+    x_coordinate_column = mine_map_variables.mineral_deposits[selected_deposit].x_coordinate_column
+    y_coordinate_column = mine_map_variables.mineral_deposits[selected_deposit].y_coordinate_column
+    z_coordinate_column = mine_map_variables.mineral_deposits[selected_deposit].z_coordinate_column
+    weight_column = mine_map_variables.mineral_deposits[selected_deposit].weight_column
+    mineral_deposit_grades = mine_map_variables.mineral_deposits[selected_deposit].grades
     blocks = []
     with open(filename) as f:
         for line in f.readlines():
@@ -105,7 +105,7 @@ def new_mineral_deposit():
     """
     new_mineral_deposit_name = input("Enter name for new Mineral Deposit \nor Leave blank to go back:")
     if new_mineral_deposit_name != "":
-        if new_mineral_deposit_name not in GlobalVariables.mineral_deposits:
+        if new_mineral_deposit_name not in mine_map_variables.mineral_deposits:
             print("Parameters for new block models:")
             x_coordinate = input("Column number for x coordinate:")
             x_coordinate = ensure_number(x_coordinate, "Column number for x coordinate:")
@@ -128,12 +128,12 @@ def new_mineral_deposit():
                     while new_mineral_name == "":
                         new_mineral_name = input("Enter mineral's name:")
                     print("Mineral Types:")
-                    for grade_type in range(len(GlobalVariables.grade_types)):
-                        print("{} - {}".format(grade_type + 1, GlobalVariables.grade_types[grade_type]))
+                    for grade_type in range(len(mine_map_variables.grade_types)):
+                        print("{} - {}".format(grade_type + 1, mine_map_variables.grade_types[grade_type]))
                     while True:
                         new_mineral_type = input("Select Mineral Type:")
                         new_mineral_type = ensure_number(new_mineral_type, "Select Mineral Type:")
-                        if 0 < new_mineral_type < len(GlobalVariables.grade_types) + 1:
+                        if 0 < new_mineral_type < len(mine_map_variables.grade_types) + 1:
                             break
                         else:
                             print("Option out of range, try again...")
@@ -148,7 +148,7 @@ def new_mineral_deposit():
                     print("Unknown option, try again...")
             mineral_deposit = MineralDeposit(new_mineral_deposit_name, x_coordinate, y_coordinate, z_coordinate,
                                              weight, grades)
-            GlobalVariables.add_mineral_deposit(new_mineral_deposit_name, mineral_deposit)
+            mine_map_variables.add_mineral_deposit_to_database(new_mineral_deposit_name, mineral_deposit)
         else:
             input("There's already a Mineral Deposit with that name.")
 
@@ -157,10 +157,8 @@ def load_block_model_from_database():
     """
     Function for loading Block Models from the database.
     """
-    menu_keys = []
     os.chdir(current_directory + "\model_files")
-    for file in glob.glob("*.db"):
-        menu_keys.append(file)
+    menu_keys = list(map(lambda file: file, glob.glob("*.db")))
     if len(menu_keys) == 0:
         input("No Block Maps Available, you must create one first...")
         return None
@@ -181,7 +179,7 @@ def load_block_model_from_database():
             if menu_key == "back":
                 break
             else:
-                GlobalVariables.set_loaded_model(read_database(current_directory + "\model_files\\" + menu_key))
+                mine_map_variables.loaded_model = read_database(current_directory + "\model_files\\" + menu_key)
                 break
         else:
             print("Unknown Option, please select one of the given ones...")
@@ -198,14 +196,13 @@ def query_block_model():
         "Total Mineral weight of model": query_block_model_total_mineral_weight,
         "Percentage of Air Blocks in model": query_block_model_air_block_percentage
     }
-    if not GlobalVariables.loaded_model:
+    if not mine_map_variables.loaded_model:
         input("you must first load a map...")
         return None
     query_keys = list(query_options.keys())
     while True:
         print("Query options:")
-        for option_index in range(len(query_keys)):
-            print("{} - {}".format(option_index + 1, query_keys[option_index]))
+        list(map(lambda option: print("{} - {}".format(option + 1, query_keys[option])), range(len(query_keys))))
         print("0 - Back")
         selected_option = input("Select Option: ")
         selected_option = ensure_number(selected_option, "Select Option: ")
@@ -214,7 +211,7 @@ def query_block_model():
                 break
             else:
                 query_key = query_keys[selected_option - 1]
-                query_options[query_key](GlobalVariables.loaded_model)
+                query_options[query_key](mine_map_variables.loaded_model)
         else:
             print("Unknown Option, please select one of the given ones...")
 
@@ -230,13 +227,14 @@ def query_block(block_model):
     z_coordinate = input("Z coordinate of the block:")
     z_coordinate = ensure_number(z_coordinate, "Z coordinate of the block:")
     block_id = str(x_coordinate) + "," + str(y_coordinate) + "," + str(z_coordinate)
-    for block in block_model.blocks:
-        if block.id == block_id:
-            print("X,Y,Z: {}".format(block_id))
-            print("Weigth: {}".format(block.weight))
-            for grade in block.grades:
-                print("{}: {} {}".format(grade, block.grades[grade]["value"],
-                                         GlobalVariables.grade_types[block.grades[grade]["grade_type"]-1]))
+    target_block = list(filter(lambda block: block.id == block_id, block_model.blocks))
+    if len(target_block) > 0:
+        print("X,Y,Z: {}".format(block_id))
+        print("Weigth: {}".format(target_block[0].weight))
+        list(map(lambda grade: print("{}: {} {}".format(grade, target_block[0].grades[grade]["value"],
+                                                        mine_map_variables.grade_types[target_block[0]
+                                                        .grades[grade]["grade_type"]-1])),
+                 target_block[0].grades))
 
 
 def query_block_model_blocks_quantity(block_model):
@@ -263,24 +261,25 @@ def query_block_model_air_block_percentage(block_model):
 
 
 def reblock_block_model():
-    if not GlobalVariables.loaded_model:
+    if not mine_map_variables.loaded_model:
         input("you must first load a map...")
         return None
-    limits = GlobalVariables.loaded_model.get_border_limits()
+    limits = mine_map_variables.loaded_model.get_border_limits()
     reblock_params = get_reblock_params(limits)
     if reblock_params:
-        GlobalVariables.loaded_model.reblock_model(reblock_params[0], reblock_params[1], reblock_params[2], False)
+        mine_map_variables.loaded_model.reblock_model(reblock_params[0], reblock_params[1], reblock_params[2], False)
 
 
 def virtual_reblock_block_model():
-    if not GlobalVariables.loaded_model:
+    if not mine_map_variables.loaded_model:
         input("you must first load a map...")
         return None
-    limits = GlobalVariables.loaded_model.get_border_limits()
+    limits = mine_map_variables.loaded_model.get_border_limits()
     reblock_params = get_reblock_params(limits)
     if reblock_params:
-        GlobalVariables.loaded_model.reblock_model(reblock_params[0], reblock_params[1], reblock_params[2], True)
+        mine_map_variables.loaded_model.reblock_model(reblock_params[0], reblock_params[1], reblock_params[2], True)
 
 
-GlobalVariables.load_mineral_deposits()
+mine_map_variables = MineMapVariables()
+mine_map_variables.load_mineral_deposits_from_database()
 main_menu()
