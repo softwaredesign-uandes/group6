@@ -374,29 +374,123 @@ class BlockModelReblockWithValidArguments(unittest.TestCase):
                              "Incorrect new grade type.")
 
     def test_block_model_reblock_model_function_exists(self):
-        self.blockModel.reblock_model(3, 3, 3)
+        self.blockModel.reblock_model(3, 3, 3, False)
 
     def test_block_model_reblock_model_correct_block_quantity(self):
-        self.blockModel.reblock_model(3, 3, 3)
+        self.blockModel.reblock_model(3, 3, 3, False)
         self.assertEqual(len(self.blockModel.blocks), 2,
                          "Incorrect reblocked model block count.")
 
     def test_block_model_reblock_model_correct_total_weight(self):
         total_weight_before_reblock = self.blockModel.total_weight()
-        self.blockModel.reblock_model(2, 2, 2)
+        self.blockModel.reblock_model(2, 2, 2, False)
         total_weight_after_reblock = self.blockModel.total_weight()
         self.assertEqual(total_weight_after_reblock, total_weight_before_reblock,
                          "Incorrect total weight after reblock.")
 
     def test_block_model_reblock_model_correct_mineral_total_weight(self):
         mineral_total_weight_before_reblock = self.blockModel.total_mineral_weight()
-        self.blockModel.reblock_model(2, 2, 2)
+        self.blockModel.reblock_model(2, 2, 2, False)
         mineral_total_weight_after_reblock = self.blockModel.total_mineral_weight()
         self.assertAlmostEqual(mineral_total_weight_after_reblock, mineral_total_weight_before_reblock,
                                "Incorrect mineral total weight after reblock.")
 
     def test_block_model_reblock_model_correct_new_border_limits(self):
-        self.blockModel.reblock_model(2, 2, 2)
+        self.blockModel.reblock_model(2, 2, 2, False)
+
+
+class BlockModelVirtualReblockWithValidArguments(unittest.TestCase):
+    def setUp(self):
+        self.block1 = Block("0,0,0"
+                            , 0
+                            , 0
+                            , 0
+                            , float(1000)
+                            , {"Au": {"value": float(100), "grade_type": 1}
+                                , "Cu": {"value": float(100), "grade_type": 2}
+                                , "Ag": {"value": float(100), "grade_type": 3}
+                                , "Li": {"value": float(100), "grade_type": 4}}
+                            )
+        self.block2 = Block("0,123,321"
+                            , 0
+                            , 123
+                            , 321
+                            , float(1000)
+                            , {"Au": {"value": float(100), "grade_type": 1}
+                                , "Cu": {"value": float(100), "grade_type": 2}
+                                , "Ag": {"value": float(100), "grade_type": 3}
+                                , "Li": {"value": float(100), "grade_type": 4}
+                               }
+                            )
+
+        self.block3 = Block("0,0,2"
+                            , 0
+                            , 0
+                            , 2
+                            , float(1000)
+                            , {"Au": {"value": float(100), "grade_type": 1}
+                                , "Cu": {"value": float(100), "grade_type": 2}
+                                , "Ag": {"value": float(100), "grade_type": 3}
+                                , "Li": {"value": float(100), "grade_type": 4}
+                               }
+                            )
+
+        self.blocks = [self.block1,
+                       self.block2,
+                       self.block3]
+
+        self.mineralDeposit = MineralDeposit("testMineralDeposit",
+                                             0,
+                                             1,
+                                             2,
+                                             3,
+                                             {"Au": {"mineral_column": 4, "grade_type": 1}}
+                                             )
+
+        self.blockModel = BlockModel("testBlockModel", self.blocks, self.mineralDeposit.name)
+
+        self.newCoordinates = (0, 0, 0)
+
+        x, y, z = self.newCoordinates[0], self.newCoordinates[1], self.newCoordinates[2]
+        newId = str(x) + "," + str(y) + "," + str(z)
+        newWeight = 3000
+        newGrades = {"Au": {"value": float(300), "grade_type": 1}
+            , "Cu": {"value": float(100), "grade_type": 2}
+            , "Ag": {"value": float(100), "grade_type": 3}
+            , "Li": {"value": float(100), "grade_type": 4}
+                     }
+        self.correctCombinedBlock = Block(newId
+                                          , x
+                                          , y
+                                          , z
+                                          , newWeight
+                                          , newGrades
+                                          )
+
+    def test_block_model_virtual_reblock_model_function_exists(self):
+        self.blockModel.reblock_model(3, 3, 3, True)
+
+    def test_block_model_virtual_reblock_model_correct_block_quantity(self):
+        self.blockModel.reblock_model(3, 3, 3, True)
+        self.assertEqual(len(self.blockModel.blocks), 2,
+                         "Incorrect reblocked model block count.")
+
+    def test_block_model_virtual_reblock_model_correct_total_weight(self):
+        total_weight_before_reblock = self.blockModel.total_weight()
+        self.blockModel.reblock_model(2, 2, 2, True)
+        total_weight_after_reblock = self.blockModel.total_weight()
+        self.assertEqual(total_weight_after_reblock, total_weight_before_reblock,
+                         "Incorrect total weight after reblock.")
+
+    def test_block_model_virtual_reblock_model_correct_mineral_total_weight(self):
+        mineral_total_weight_before_reblock = self.blockModel.total_mineral_weight()
+        self.blockModel.reblock_model(2, 2, 2, True)
+        mineral_total_weight_after_reblock = self.blockModel.total_mineral_weight()
+        self.assertAlmostEqual(mineral_total_weight_after_reblock, mineral_total_weight_before_reblock,
+                               "Incorrect mineral total weight after reblock.")
+
+    def test_block_model_virtual_reblock_model_correct_new_border_limits(self):
+        self.blockModel.reblock_model(2, 2, 2, True)
         new_border_limits = self.blockModel.get_border_limits()
         self.assertEqual(new_border_limits, [0, 61, 160],
                          "Incorrect border limits after reblock.")
@@ -472,11 +566,89 @@ class BlockModelReblockWithInvalidArguments(unittest.TestCase):
 
     def test_block_model_reblock_model_invalid_types(self):
         with self.assertRaises(TypeError):
-            self.blockModel.reblock_model("A", {}, self.blocks)
+            self.blockModel.reblock_model("A", {}, self.blocks, False)
 
     def test_block_model_reblock_model_invalid_values(self):
         with self.assertRaises(ValueError):
-            self.blockModel.reblock_model(-1, 1, 1)
+            self.blockModel.reblock_model(-1, 1, 1, False)
+
+
+class BlockModelVirtualReblockWithInvalidArguments(unittest.TestCase):
+    def setUp(self):
+        self.block1 = Block("0,0,0"
+                            , 0
+                            , 0
+                            , 0
+                            , float(1000)
+                            , {"Au": {"value": float(100), "grade_type": 1}
+                                , "Cu": {"value": float(100), "grade_type": 2}
+                                , "Ag": {"value": float(100), "grade_type": 3}
+                                , "Li": {"value": float(100), "grade_type": 4}}
+                            )
+        self.block2 = Block("0,123,321"
+                            , 0
+                            , 123
+                            , 321
+                            , float(1000)
+                            , {"Au": {"value": float(100), "grade_type": 1}
+                                , "Cu": {"value": float(100), "grade_type": 2}
+                                , "Ag": {"value": float(100), "grade_type": 3}
+                                , "Li": {"value": float(100), "grade_type": 4}
+                               }
+                            )
+
+        self.block3 = Block("0,0,2"
+                            , 0
+                            , 0
+                            , 2
+                            , float(1000)
+                            , {"Au": {"value": float(100), "grade_type": 1}
+                                , "Cu": {"value": float(100), "grade_type": 2}
+                                , "Ag": {"value": float(100), "grade_type": 3}
+                                , "Li": {"value": float(100), "grade_type": 4}
+                               }
+                            )
+
+        self.blocks = [self.block1,
+                       self.block2,
+                       self.block3]
+
+        self.mineralDeposit = MineralDeposit("testMineralDeposit",
+                                                           0,
+                                                           1,
+                                                           2,
+                                                           3,
+                                                           {"Au":{"mineral_column": 4,"grade_type": 1}}
+                                                           )
+
+        self.blockModel = BlockModel("testBlockModel", self.blocks, self.mineralDeposit.name)
+
+        self.newCoordinates = (0,0,0)
+
+        x, y, z = self.newCoordinates[0], self.newCoordinates[1], self.newCoordinates[2]
+        newId = str(x) + "," + str(y) + "," + str(z)
+        newWeight = 3000
+        newGrades = {"Au": {"value": float(300), "grade_type": 1}
+                        , "Cu": {"value": float(100), "grade_type": 2}
+                        , "Ag": {"value": float(100), "grade_type": 3}
+                        , "Li": {"value": float(100), "grade_type": 4}
+                     }
+        self.correctCombinedBlock = Block(newId
+                            , x
+                            , y
+                            , z
+                            , newWeight
+                            , newGrades
+                            )
+
+    def test_block_model_virtual_reblock_model_invalid_types(self):
+        with self.assertRaises(TypeError):
+            self.blockModel.reblock_model("A", {}, self.blocks, True)
+
+    def test_block_model_virtual_reblock_model_invalid_values(self):
+        with self.assertRaises(ValueError):
+            self.blockModel.reblock_model(-1, 1, 1, True)
+
 
 class BlockModelReblockWithDimensionsThatAreNotDivisibleByReblockFactors(unittest.TestCase):
     def setUp(self):
@@ -548,44 +720,157 @@ class BlockModelReblockWithDimensionsThatAreNotDivisibleByReblockFactors(unittes
 
     def test_block_model_reblock_model_by_zero_at_x_coordinate(self):
         with self.assertRaises(ValueError):
-            self.blockModel.reblock_model(0, 1, 1)
+            self.blockModel.reblock_model(0, 1, 1, False)
 
     def test_block_model_reblock_model_by_zero_at_y_coordinate(self):
         with self.assertRaises(ValueError):
-            self.blockModel.reblock_model(1, 0, 1)
+            self.blockModel.reblock_model(1, 0, 1, False)
 
     def test_block_model_reblock_model_by_zero_at_z_coordinate(self):
         with self.assertRaises(ValueError):
-            self.blockModel.reblock_model(1, 1, 0)
+            self.blockModel.reblock_model(1, 1, 0, False)
 
     def test_block_model_reblock_model_by_zero_at_all_coordinates(self):
         with self.assertRaises(ValueError):
-            self.blockModel.reblock_model(0, 0, 0)
+            self.blockModel.reblock_model(0, 0, 0, False)
 
     def test_block_model_reblock_model_not_divisible_at_x_coordinate(self):
         old_block_quantity = self.blockModel.count_blocks()
-        self.blockModel.reblock_model(3, 2, 2)
+        self.blockModel.reblock_model(3, 2, 2, False)
         new_block_quantity = self.blockModel.count_blocks()
         self.assertTrue(old_block_quantity >= new_block_quantity,
                         "is not being filled correctly with air blocks when it is not divisible at x coordinate")
 
     def test_block_model_reblock_model_not_divisible_at_y_coordinate(self):
         old_block_quantity = self.blockModel.count_blocks()
-        self.blockModel.reblock_model(2, 3, 2)
+        self.blockModel.reblock_model(2, 3, 2, False)
         new_block_quantity = self.blockModel.count_blocks()
         self.assertTrue(old_block_quantity >= new_block_quantity,
                         "is not being filled correctly with air blocks when it is not divisible at y coordinate")
 
     def test_block_model_reblock_model_not_divisible_at_z_coordinate(self):
         old_block_quantity = self.blockModel.count_blocks()
-        self.blockModel.reblock_model(2, 2, 3)
+        self.blockModel.reblock_model(2, 2, 3, False)
         new_block_quantity = self.blockModel.count_blocks()
         self.assertTrue(old_block_quantity >= new_block_quantity,
                         "is not being filled correctly with air blocks when it is not divisible at z coordinate")
 
     def test_block_model_reblock_model_not_divisible_at_all_coordinates(self):
         old_block_quantity = self.blockModel.count_blocks()
-        self.blockModel.reblock_model(3, 3, 3)
+        self.blockModel.reblock_model(3, 3, 3, False)
+        new_block_quantity = self.blockModel.count_blocks()
+        self.assertTrue(old_block_quantity >= new_block_quantity,
+                        "is not being filled correctly with air blocks when it is not divisible at all coordinates")
+
+
+class BlockModelVirtualReblockWithDimensionsThatAreNotDivisibleByReblockFactors(unittest.TestCase):
+    def setUp(self):
+        self.block1 = Block("0,0,0"
+                            , 0
+                            , 0
+                            , 0
+                            , float(1000)
+                            , {"Au": {"value": float(100), "grade_type": 1}
+                                , "Cu": {"value": float(100), "grade_type": 2}
+                                , "Ag": {"value": float(100), "grade_type": 3}
+                                , "Li": {"value": float(100), "grade_type": 4}}
+                            )
+        self.block2 = Block("8,2,4"
+                            , 8
+                            , 2
+                            , 4
+                            , float(1000)
+                            , {"Au": {"value": float(100), "grade_type": 1}
+                                , "Cu": {"value": float(100), "grade_type": 2}
+                                , "Ag": {"value": float(100), "grade_type": 3}
+                                , "Li": {"value": float(100), "grade_type": 4}
+                               }
+                            )
+
+        self.block3 = Block("6,4,2"
+                            , 6
+                            , 4
+                            , 2
+                            , float(1000)
+                            , {"Au": {"value": float(100), "grade_type": 1}
+                                , "Cu": {"value": float(100), "grade_type": 2}
+                                , "Ag": {"value": float(100), "grade_type": 3}
+                                , "Li": {"value": float(100), "grade_type": 4}
+                               }
+                            )
+
+        self.blocks = [self.block1,
+                       self.block2,
+                       self.block3]
+
+        self.mineralDeposit = MineralDeposit("testMineralDeposit",
+                                                           0,
+                                                           1,
+                                                           2,
+                                                           3,
+                                                           {"Au":{"mineral_column": 4,"grade_type": 1}}
+                                                           )
+
+        self.blockModel = BlockModel("testBlockModel", self.blocks, self.mineralDeposit.name)
+
+        self.newCoordinates = (0,0,0)
+
+        x, y, z = self.newCoordinates[0], self.newCoordinates[1], self.newCoordinates[2]
+        newId = str(x) + "," + str(y) + "," + str(z)
+        newWeight = 3000
+        newGrades = {"Au": {"value": float(300), "grade_type": 1}
+                        , "Cu": {"value": float(100), "grade_type": 2}
+                        , "Ag": {"value": float(100), "grade_type": 3}
+                        , "Li": {"value": float(100), "grade_type": 4}
+                     }
+        self.correctCombinedBlock = Block(newId
+                            , x
+                            , y
+                            , z
+                            , newWeight
+                            , newGrades
+                            )
+
+    def test_block_model_virtual_reblock_model_by_zero_at_x_coordinate(self):
+        with self.assertRaises(ValueError):
+            self.blockModel.reblock_model(0, 1, 1, True)
+
+    def test_block_model_virtual_reblock_model_by_zero_at_y_coordinate(self):
+        with self.assertRaises(ValueError):
+            self.blockModel.reblock_model(1, 0, 1, True)
+
+    def test_block_model_virtual_reblock_model_by_zero_at_z_coordinate(self):
+        with self.assertRaises(ValueError):
+            self.blockModel.reblock_model(1, 1, 0, True)
+
+    def test_block_model_virtual_reblock_model_by_zero_at_all_coordinates(self):
+        with self.assertRaises(ValueError):
+            self.blockModel.reblock_model(0, 0, 0, True)
+
+    def test_block_model_virtual_reblock_model_not_divisible_at_x_coordinate(self):
+        old_block_quantity = self.blockModel.count_blocks()
+        self.blockModel.reblock_model(3, 2, 2, True)
+        new_block_quantity = self.blockModel.count_blocks()
+        self.assertTrue(old_block_quantity >= new_block_quantity,
+                        "is not being filled correctly with air blocks when it is not divisible at x coordinate")
+
+    def test_block_model_virtual_reblock_model_not_divisible_at_y_coordinate(self):
+        old_block_quantity = self.blockModel.count_blocks()
+        self.blockModel.reblock_model(2, 3, 2, True)
+        new_block_quantity = self.blockModel.count_blocks()
+        self.assertTrue(old_block_quantity >= new_block_quantity,
+                        "is not being filled correctly with air blocks when it is not divisible at y coordinate")
+
+    def test_block_model_virtual_reblock_model_not_divisible_at_z_coordinate(self):
+        old_block_quantity = self.blockModel.count_blocks()
+        self.blockModel.reblock_model(2, 2, 3, True)
+        new_block_quantity = self.blockModel.count_blocks()
+        self.assertTrue(old_block_quantity >= new_block_quantity,
+                        "is not being filled correctly with air blocks when it is not divisible at z coordinate")
+
+    def test_block_model_virtual_reblock_model_not_divisible_at_all_coordinates(self):
+        old_block_quantity = self.blockModel.count_blocks()
+        self.blockModel.reblock_model(3, 3, 3, True)
         new_block_quantity = self.blockModel.count_blocks()
         self.assertTrue(old_block_quantity >= new_block_quantity,
                         "is not being filled correctly with air blocks when it is not divisible at all coordinates")

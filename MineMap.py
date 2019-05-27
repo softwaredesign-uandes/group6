@@ -4,7 +4,8 @@ from Block import *
 from BlockModel import *
 from MineralDeposit import *
 import GlobalVariables
-from UtilityFunctions import ensure_number, save_to_database, read_database, close_program, current_directory
+from UtilityFunctions import ensure_number, save_to_database, read_database, close_program, current_directory,\
+    get_reblock_params
 
 
 def main_menu():
@@ -14,6 +15,7 @@ def main_menu():
         "Load Block Model": load_block_model_from_database,
         "Query Block Model": query_block_model,
         "Reblock Block Model": reblock_block_model,
+        "Virtual Reblock Block Model": virtual_reblock_block_model,
         "Exit": close_program
     }
 
@@ -259,31 +261,25 @@ def query_block_model_air_block_percentage(block_model):
     air_blocks_percentage = block_model.air_blocks_percentage()
     print("Percentage of Air blocks: {}%.".format(air_blocks_percentage))
 
+
 def reblock_block_model():
     if not GlobalVariables.loaded_model:
         input("you must first load a map...")
         return None
-    reblock_params = [None, None, None]
-    reblock_axis = ["x","y","z"]
-    axis_index = 0
-    print("Leave blank to go back...")
-    while None in reblock_params:
-        message = "input the amount to reblock {} axis: ".format(reblock_axis[axis_index])
-        param_value = input(message)
-        if not param_value: return None
-        param_value = ensure_number(param_value,message)
-        if param_value <= 0:
-            input("Invalid input: only can input a positive value...")
-            continue
-        #limits = GlobalVariables.loaded_model.get_border_limits()
-        limits = (100,100,100)
-        if not (0 < param_value <= limits[axis_index]):
-            input("Invalid input: max value to reblock in {} axis is {}".format(reblock_axis[axis_index],limits[axis_index]))
-            continue
-        reblock_params[axis_index] = param_value
-        axis_index += 1
-    GlobalVariables.loaded_model.reblock_model(reblock_params[0],reblock_params[1],reblock_params[2])
+    limits = GlobalVariables.loaded_model.get_border_limits()
+    reblock_params = get_reblock_params(limits)
+    if reblock_params:
+        GlobalVariables.loaded_model.reblock_model(reblock_params[0], reblock_params[1], reblock_params[2], False)
 
+
+def virtual_reblock_block_model():
+    if not GlobalVariables.loaded_model:
+        input("you must first load a map...")
+        return None
+    limits = GlobalVariables.loaded_model.get_border_limits()
+    reblock_params = get_reblock_params(limits)
+    if reblock_params:
+        GlobalVariables.loaded_model.reblock_model(reblock_params[0], reblock_params[1], reblock_params[2], True)
 
 
 GlobalVariables.load_mineral_deposits()

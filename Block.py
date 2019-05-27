@@ -1,4 +1,6 @@
-class Block:  # Value Object
+from AbstractBlock import *
+
+class Block(AbstractBlock):  # Value Object
     def __init__(self, block_id, x, y, z, weight, grades):
         self._id = None
         self._x_coordinate = None
