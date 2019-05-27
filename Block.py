@@ -122,7 +122,7 @@ class Block(AbstractBlock):  # Value Object
                 raise ValueError("value of a grade must be non negative")
             if not (isinstance(block_grades[mineral]["grade_type"], int)):
                 raise TypeError("index of grade type must be integer")
-            if not (block_grades[mineral]["grade_type"] > 0):
+            if not (block_grades[mineral]["grade_type"] >= 0):
                 raise ValueError("index of grade type must be greater than zero")
         self._grades = block_grades
 
