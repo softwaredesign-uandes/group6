@@ -118,7 +118,7 @@ class MineralDeposit:  # Entity
                 raise ValueError("Value of a grade column must be non negative")
             if not (isinstance(mineral_deposit_grades[mineral]["grade_type"], int)):
                 raise TypeError("Index of grade type must be integer")
-            if not (mineral_deposit_grades[mineral]["grade_type"] > 0):
+            if not (mineral_deposit_grades[mineral]["grade_type"] >= 0):
                 raise ValueError("Index of grade type must be greater than zero")
 
     @grades.setter
