@@ -248,4 +248,6 @@ def get_block_model_block(block_model_id, block_id):
 
 
 if __name__ == '__main__':
+    if not os.path.exists('API'):
+        os.mkdir('API')
     app.run(host='0.0.0.0', port=80, debug=True)
