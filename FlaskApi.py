@@ -200,8 +200,11 @@ def get_block_model_blocks(block_model_id):
         block_model_file = block_model_files[block_model_ids.index(block_model_id)]
         block_model = read_from_api(block_model_file)
         blocks = []
+        block_model_borders = block_model.get_border_limits()
         for block in block_model.blocks:
             blocks.append({
+                'block_id': three_to_one_dimensions(block.x_coordinate, block.y_coordinate, block.z_coordinate,
+                                                    block_model_borders),
                 'x_index': block.x_coordinate,
                 'y_index': block.y_coordinate,
                 'z_index': block.z_coordinate,
@@ -245,6 +248,65 @@ def get_block_model_block(block_model_id, block_id):
             return jsonify({'Error': "Block ID not found"}), 404
     else:
         return jsonify({'Error': "Block Model ID not found"}), 404
+
+
+@app.route('/block_models/<block_model_id>/blocks/<block_id>', methods=['PATCH'])
+def update_block_model_block(block_model_id, block_id):
+    try:
+        block_model_id = int(block_model_id)
+        block_id = int(block_id)
+    except:
+        return jsonify({'Error': "IDs must be numerical."}), 400
+
+    if request.data:
+        if "block" not in request.json:
+            return jsonify({'Error': "Missing block parameter"}), 400
+    else:
+        return jsonify({'Error': "Missing PATCH arguments."}), 400
+
+    block_model_files = read_mineral_deposit_block_models_files()
+    block_model_ids = [int(x[:x.index(".")]) for x in block_model_files]
+    if block_model_id in block_model_ids:
+        block_model_file = block_model_files[block_model_ids.index(block_model_id)]
+        block_model = read_from_api(block_model_file)
+        block_model_borders = block_model.get_border_limits()
+        coordinates = one_to_three_dimensions(block_id, block_model_borders)
+        query_blocks = list(filter(lambda block: block.id == "{},{},{}".format(coordinates[0], coordinates[1],
+                                                                               coordinates[2]),
+                                   block_model.blocks))
+        if len(query_blocks) > 0:
+            query_block = query_blocks[0]
+            if "weight" in request.json["block"]:
+                try:
+                    query_block.weight = float(request.json["block"]["weight"])
+                except:
+                    return jsonify({'Error': "Weight must be a number"}), 400
+            if "grades" in request.json["block"]:
+                for grade in request.json["block"]["grades"]:
+                    if grade in query_block.grades:
+                        try:
+                            query_block.grades[grade]["value"] = float(request.json["block"]["grades"][grade])
+                        except:
+                            return jsonify({'Error': "{} must have a numerical value".format(grade)}), 400
+                    else:
+                        return jsonify({'Error': "Block doesn't have {} mineral grade.".format(grade)}), 400
+
+            save_to_api(block_model_file, block_model)
+            return jsonify({'Success': "Block {} successfully updated".format(block_id),
+                            "block": {
+                                'x_index': query_block.x_coordinate,
+                                'y_index': query_block.y_coordinate,
+                                'z_index': query_block.z_coordinate,
+                                'weight': query_block.weight,
+                                'grades': query_block.grades
+                            }
+                            })
+        else:
+            return jsonify({'Error': "Block ID not found"}), 404
+    else:
+        return jsonify({'Error': "Block Model ID not found"}), 404
+
+
 
 
 if __name__ == '__main__':

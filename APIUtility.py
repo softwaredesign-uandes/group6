@@ -79,3 +79,10 @@ def one_to_three_dimensions(block_id, borders):
     x = block_id - y * (borders[0]+1)
     return [x, y, z]
 
+
+def three_to_one_dimensions(x, y, z, borders):
+    block_id = 0
+    block_id += x
+    block_id += y * (borders[0]+1)
+    block_id += z * (borders[0]+1) * (borders[1]+1)
+    return block_id
