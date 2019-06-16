@@ -73,7 +73,7 @@ def check_response_contains_headers(request, request_object, headers):
                 return "Missing header {}.".format(header)
         return None
     else:
-        return "Missing POST arguments."
+        return "Missing Request Body."
 
 
 def one_to_three_dimensions(block_id, borders):

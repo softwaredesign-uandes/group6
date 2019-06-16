@@ -108,7 +108,6 @@ def get_block_model(block_model_id):
         return jsonify({'Error': "ID not found"}), 404
 
 
-
 @app.route('/block_models', methods=['POST'])
 def post_block_model():
     needed_block_model_headers = ["mineral_deposit_id", "name", "x_indices", "y_indices", "z_indices", "weights",
@@ -185,6 +184,55 @@ def post_block_model():
                                    base_block_model.mineral_deposit),
                     base_block_model)
     return jsonify({'Success': "Ok."})
+
+
+@app.route('/block_models/<block_model_id>', methods=['PATCH'])
+def update_block_model(block_model_id):
+    try:
+        block_model_id = int(block_model_id)
+    except:
+        return jsonify({'Error': "ID must be numerical."}), 400
+
+    answer = check_response_contains_headers(request, 'block_model', ['edit_type', 'column_name'])
+    if answer is not None:
+        return jsonify({'Error': answer}), 400
+
+    block_model_files = read_mineral_deposit_block_models_files()
+    block_model_ids = [int(x[:x.index(".")]) for x in block_model_files]
+    if block_model_id in block_model_ids:
+        block_model_file = block_model_files[block_model_ids.index(block_model_id)]
+        block_model = read_from_api(block_model_file)
+        block_template = block_model.blocks[0]
+
+        if request.json['block_model']['edit_type'] == "add":
+            new_column_name = request.json['block_model']['column_name']
+            if new_column_name in block_template.extras:
+                return jsonify({'Error': "Block model already has a '{}' column.".format(new_column_name)}), 400
+            else:
+                if "values" not in request.json['block_model']:
+                    return jsonify({'Error': "Request to add column is missing values"}), 400
+                else:
+                    if len(request.json['block_model']['values']) != block_model.count_blocks():
+                        return jsonify({'Error': "To add a column, you need a values quantity equal to "
+                                                 "the blocks quantity of the model"}), 400
+                    else:
+                        new_values = request.json['block_model']['values']
+                        for block_index in range(len(block_model.blocks)):
+                            block = block_model.blocks[block_index]
+                            block.extras[new_column_name] = new_values[block_index]
+        elif request.json['block_model']['edit_type'] == "remove":
+            remove_column_name = request.json['block_model']['column_name']
+            if remove_column_name not in block_template.extras:
+                return jsonify({'Error': "Block model lacks a '{}' column.".format(remove_column_name)}), 400
+            else:
+                for block in block_model.blocks:
+                    del block.extras[remove_column_name]
+        else:
+            return jsonify({'Error': "Unknown type of edition"}), 400
+        save_to_api(block_model_file, block_model)
+        return jsonify({'Success': "Update successful."})
+    else:
+        return jsonify({'Error': "ID not found"}), 404
 
 
 """
