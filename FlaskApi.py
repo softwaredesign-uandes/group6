@@ -138,6 +138,10 @@ def post_block_model():
         for grade in request.json['block_model']['grades']:
             length = len(request.json['block_model']['grades'][grade]['values'])
             block_info_length.append(length)
+        if "extras" in request.json['block_model']:
+            for extra in request.json['block_model']["extras"]:
+                length = len(request.json['block_model']["extras"][extra])
+                block_info_length.append(length)
 
         if len(set(block_info_length)) > 1:
             return jsonify({'Error': "Block values must all be of same length"}), 400
@@ -145,7 +149,7 @@ def post_block_model():
         try:
             model_blocks = parse_blocks(block_info_length[0], request)
         except:
-            return jsonify({'Error': "Block values must all be numeric"}), 400
+            return jsonify({'Error': "Block x,y,z, weight, grade values must be numeric"}), 400
 
         new_block_model = BlockModel(request.json['block_model']['name'],
                                      model_blocks,
@@ -209,7 +213,8 @@ def get_block_model_blocks(block_model_id):
                 'y_index': block.y_coordinate,
                 'z_index': block.z_coordinate,
                 'weight': block.weight,
-                'grades': block.grades
+                'grades': block.grades,
+                'extras': block.extras
             })
 
         return jsonify({"blocks": blocks})
@@ -242,7 +247,8 @@ def get_block_model_block(block_model_id, block_id):
                 'y_index': query_block.y_coordinate,
                 'z_index': query_block.z_coordinate,
                 'weight': query_block.weight,
-                'grades': query_block.grades}
+                'grades': query_block.grades,
+                'extras': query_block.extras}
             })
         else:
             return jsonify({'Error': "Block ID not found"}), 404

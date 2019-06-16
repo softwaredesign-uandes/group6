@@ -46,8 +46,12 @@ def parse_blocks(blocks_quantity, block_model_request):
                 "value": block_model_request.json['block_model']['grades'][grade]['values'][i],
                 "grade_type": block_model_request.json['block_model']['grades'][grade]['type']
             }
+        extras = {}
+        if "extras" in block_model_request.json['block_model']:
+            for extra in block_model_request.json['block_model']["extras"]:
+                extras[extra] = block_model_request.json['block_model']["extras"][extra][i]
         new_block = Block("{},{},{}".format(x_coordinate, y_coordinate, z_coordinate),
-                          x_coordinate, y_coordinate, z_coordinate, weight, grades)
+                          x_coordinate, y_coordinate, z_coordinate, weight, grades, extras)
         model_blocks.append(new_block)
     return model_blocks
 
