@@ -1,11 +1,17 @@
 from BlockModel import *
 from Block import *
 from MineralDeposit import *
-from flask import Flask, request, abort, jsonify
+from flask import Flask, request, abort, jsonify, render_template
 from APIUtility import *
 app = Flask(__name__)
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
+
+
+@app.route('/')
+def hello_name():
+    return render_template('blocks.html')
+
 
 """
 Mineral Deposits Routes.
