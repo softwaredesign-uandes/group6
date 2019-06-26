@@ -1,7 +1,7 @@
 from AbstractBlock import *
 
 class Block(AbstractBlock):  # Value Object
-    def __init__(self, block_id, x, y, z, weight, grades):
+    def __init__(self, block_id, x, y, z, weight, grades, extras={}):
         self._id = None
         self._x_coordinate = None
         self._y_coordinate = None
@@ -15,6 +15,7 @@ class Block(AbstractBlock):  # Value Object
         self.id = block_id
         self.weight = weight
         self.grades = grades
+        self.extras = extras
 
     @property
     def id(self):

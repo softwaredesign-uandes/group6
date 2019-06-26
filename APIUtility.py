@@ -46,8 +46,12 @@ def parse_blocks(blocks_quantity, block_model_request):
                 "value": block_model_request.json['block_model']['grades'][grade]['values'][i],
                 "grade_type": block_model_request.json['block_model']['grades'][grade]['type']
             }
+        extras = {}
+        if "extras" in block_model_request.json['block_model']:
+            for extra in block_model_request.json['block_model']["extras"]:
+                extras[extra] = block_model_request.json['block_model']["extras"][extra][i]
         new_block = Block("{},{},{}".format(x_coordinate, y_coordinate, z_coordinate),
-                          x_coordinate, y_coordinate, z_coordinate, weight, grades)
+                          x_coordinate, y_coordinate, z_coordinate, weight, grades, extras)
         model_blocks.append(new_block)
     return model_blocks
 
@@ -69,7 +73,7 @@ def check_response_contains_headers(request, request_object, headers):
                 return "Missing header {}.".format(header)
         return None
     else:
-        return "Missing POST arguments."
+        return "Missing Request Body."
 
 
 def one_to_three_dimensions(block_id, borders):
@@ -79,3 +83,10 @@ def one_to_three_dimensions(block_id, borders):
     x = block_id - y * (borders[0]+1)
     return [x, y, z]
 
+
+def three_to_one_dimensions(x, y, z, borders):
+    block_id = 0
+    block_id += x
+    block_id += y * (borders[0]+1)
+    block_id += z * (borders[0]+1) * (borders[1]+1)
+    return block_id
